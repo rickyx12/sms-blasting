@@ -26,8 +26,9 @@ $(function(){
 			}
 
 			$.ajax({
-				url: 'http://192.168.1.92/action_page?cpNumber='+val+'&message='+message,
-				type:'GET',		
+				url: base_url+'Dashboard/toSend',
+				type:'POST',
+				data:data,		
 				success:function(result) {
 
 					if(result == 'sent') {
