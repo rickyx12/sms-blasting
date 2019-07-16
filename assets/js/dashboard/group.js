@@ -30,7 +30,6 @@ $(function(){
 				url: 'http://192.168.1.92/action_page?cpNumber='+val+'&message='+message,
 				type:'GET',
 				headers: {
-				  "accept": "application/json",
 				  "Access-Control-Allow-Origin":"*"
 				},			
 				success:function(result) {
