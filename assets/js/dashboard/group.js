@@ -1,6 +1,46 @@
-$(function(){
 
-	var base_url = $('body').data('urlbase');
+var base_url = $('body').data('urlbase');
+
+function sendSMS(dataArr,message,startIndex,endIndex) {
+
+	let str = dataArr[startIndex];
+	let dataHandler = str.split('-');
+
+	let data = {
+		cpNumber: dataHandler[1],
+		message:message
+	}
+
+	$.ajax({
+		url: base_url+'Dashboard/toSend',
+		type:'POST',
+		data:data,		
+		success:function(result) {
+
+			if(result == 'sent') {
+				$('#status'+dataHandler[0]).html("<i class='fa fa-check'></i>");
+			}else {
+				$('#status'+dataHandler[0]).html("<i class='fa fa-times'></i>");
+			}
+
+
+		    if (startIndex != endIndex) {
+
+		    	sendSMS(dataArr,message,(startIndex + 1),endIndex);
+		    }else {
+
+		        $('#sendBtn').attr('disabled',false);
+		        $('#message').attr('disabled',false);		    	
+		    }
+
+
+		} 
+	});	
+
+}
+
+
+$(function(){
 	
 	$('#sendBtn').click(function() {
 
@@ -9,43 +49,15 @@ $(function(){
 
 		let numberArr = [];
 		let message = $('#message').val();
-		let count = $('.number').length;
+		let count = $('.number:checked').length;
 
 		$(".number:checked").each(function() {
 			numberArr.push($(this).val());
 		});		
 
-		$.each(numberArr,function(index,val){
-			
-			let str = val;
-			let dataHandler = str.split('-');
 
-			let data = {
-				cpNumber: dataHandler[1],
-				message:message
-			}
+		sendSMS(numberArr,message,0,(count -1));
 
-			$.ajax({
-				url: base_url+'Dashboard/toSend',
-				type:'POST',
-				data:data,		
-				success:function(result) {
-
-					if(result == 'sent') {
-						$('#status'+dataHandler[0]).html("<i class='fa fa-check'></i>");
-					}else {
-						$('#status'+dataHandler[0]).html("<i class='fa fa-times'></i>");
-					}
-
-				    if (index+1 === count) {
-				        $('#sendBtn').attr('disabled',false);
-				        $('#message').attr('disabled',false);
-				    }
-
-				} 
-			});
-
-		});
 	});
 
 });
