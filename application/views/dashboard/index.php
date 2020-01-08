@@ -5,7 +5,7 @@
       <!-- Breadcrumbs-->
       <ol class="breadcrumb">
         <li class="breadcrumb-item">
-          <a href="#">Dashboard</a>
+          <a href="#">Group</a>
         </li>
       </ol>
       <div class="row">

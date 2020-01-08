@@ -7,6 +7,7 @@ class Groups extends CI_Controller {
  		parent::__construct();
  		$this->load->helper('url');
  		$this->load->model('groups_model');
+        $this->load->model('people_model');
  		$this->load->library('session');
  	}
 
@@ -57,6 +58,25 @@ class Groups extends CI_Controller {
         echo json_encode($data);            
     }	
 
+    public function groupsJSON1() {
+
+        $this->isLogged();
+
+        $data = $this->groups_model->getGroups("","","")->result();
+
+        echo json_encode($data);            
+    }
+
+    public function getPeopleByGroup() {
+
+        $this->isLogged();
+
+        $group = $this->input->post("groupId");
+
+        $data = $this->people_model->getPeopleByGroup("","","",$group)->result();
+
+        echo json_encode($data);            
+    }
 
     public function update() {
 

@@ -11,8 +11,8 @@
 
   <title>Blasting</title>
 
-  <link rel="shortcut icon" href="<?= base_url('assets/img/favicon.ico') ?>" type="image/x-icon">
-  <link rel="icon" href="<?= base_url('assets/img/favicon.ico') ?>" type="image/x-icon">
+  <link rel="shortcut icon" href="<?= base_url('assets/img/sbt.ico') ?>" type="image/x-icon">
+  <link rel="icon" href="<?= base_url('assets/img/sbt.ico') ?>" type="image/x-icon">
 
   <!-- Custom fonts for this template-->
   <link href="<?= base_url('assets/vendor/fontawesome-free/css/all.min.css') ?>" rel="stylesheet" type="text/css">
@@ -32,20 +32,20 @@
   <script src="<?= base_url('assets/js/bootstrap.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/select2.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/sweetalert.min.js') ?>"></script>
-  <script src="<?= base_url('assets/js/jquery.dataTables.min.js') ?>"></script>
+  <script src="<?= base_url('assets/js/loadingoverlay.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/moment.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/tempusdominus-bootstrap-4.min.js') ?>"></script>
-  <script src="<?= base_url('assets/js/dataTables.buttons.min.js') ?>"></script>
+  <script src="<?= base_url('assets/js/misc.js') ?>"></script>
+  <script src="<?= base_url('assets/js/jquery.dataTables.min.js') ?>"></script>
+   <script src="<?= base_url('assets/js/dataTables.buttons.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/buttons.flash.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/jszip.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/pdfmake.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/vfs_fonts.js') ?>"></script>
-  <script src="<?= base_url('assets/js/buttons.html5.min.js') ?>"></script>
-  <script src="<?= base_url('assets/js/misc.js') ?>"></script>
-  <script src="<?= base_url('assets/js/daterangepicker.min.js') ?>"></script>
+  <script src="<?= base_url('assets/js/buttons.html5.min.js') ?>"></script> 
 </head>
 
 <body id="page-top" data-urlbase="<?= base_url() ?>">
-
+<script src="<?= base_url('assets/js/navbar/navbar.js') ?>"></script>
 <?php include('navbar.php') ?>
 <?php include('sidebar.php') ?>

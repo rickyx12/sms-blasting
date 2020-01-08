@@ -11,3 +11,26 @@ a.links:hover {
 	color:red;
 	text-decoration: none;
 }
+
+.inbox-msg, .outbox-msg {
+	font-size: 15px;
+}
+
+.inbox-btn {
+	text-decoration: none;
+	color: #000000;
+}
+
+.inbox-btn:hover {
+	text-decoration: none;
+	color:#FF0000;
+}
+
+.navbar-status {
+	color:#FFFFFF;
+	margin-right: 50px;
+}
+
+.remainChar {
+	padding-top:30px;
+}

@@ -24,6 +24,8 @@
 <body class="bg-dark">
 
   <div class="container">
+
+
     <div class="card card-login mx-auto mt-5">
       <div class="card-header">Login</div>
       <div class="card-body">
@@ -44,12 +46,45 @@
           </form>
       </div>
     </div>
+
+
+
   </div>
 
   <!-- Bootstrap core JavaScript-->
   <script src="<?= base_url('assets/vendor/jquery/jquery.min.js') ?>"></script>
+  <script src="<?= base_url('assets/js/loadingoverlay.min.js') ?>"></script>
   <!-- <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script> -->
 
-</body>
+<script>
+  
+  $(function(){
 
+    function startup() {
+
+      $.ajax({
+        url: 'http://192.168.1.92/startup',
+        beforeSend:function() {
+          $.LoadingOverlay('show',{
+              image: "",
+              text: "Connecting to SMS."
+          });
+        },
+        success:function(result) {
+          $.LoadingOverlay('hide');
+        },
+        error:function() {
+          $.LoadingOverlay("text","Can't connect to SMS. Refresh the page.");   
+        }
+      }); 
+
+    }
+
+    startup();
+
+  });
+
+</script>
+
+</body>
 </html>

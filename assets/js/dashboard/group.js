@@ -17,7 +17,7 @@ function sendSMS(dataArr,message,startIndex,endIndex) {
 		data:data,		
 		success:function(result) {
 
-			if(result == 'sent') {
+			if(result != '') {
 				$('#status'+dataHandler[0]).html("<i class='fa fa-check'></i>");
 			}else {
 				$('#status'+dataHandler[0]).html("<i class='fa fa-times'></i>");
