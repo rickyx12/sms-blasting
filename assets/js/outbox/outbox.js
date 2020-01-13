@@ -1,6 +1,8 @@
 var base_url = $('body').data('urlbase');
+var toSendArr = [];
+var outboxTotal = 0;
 
-function toSend(id,cpNumber, message) {
+function toSend(id,cpNumber, message,index,end,sent) {
 
 	let data = {
 		cpNumber: cpNumber,
@@ -11,17 +13,30 @@ function toSend(id,cpNumber, message) {
 		url:base_url+'Outbox/toSend',
 		type:'POST',
 		data:data,
-		success:function(result) {
+		success:function(data, textStatus, xhr) {
 
-			if(result != '') {
+			if(xhr.status == 200) {
 				$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
+				$('#totalSent').html(sent);
+
+				if(index !== end) {
+					toSend(toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index+1,toSendArr.length,sent+1);
+				}else {
+					$('#sendFromOutboxBtn').attr('disabled',false);
+					$('#removeOutboxBtn').attr('disabled',false);					
+				}
+
+
 			}else {
 				$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
+
+				if(index !== end) {
+					toSend(toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index,toSendArr.length);
+				}
 			}
 		},
 		complete:function() {
-			$('#sendFromOutboxBtn').attr('disabled',false);
-			$('#removeOutboxBtn').attr('disabled',false);
+
 		}
 	});
 
@@ -37,12 +52,11 @@ function deleteOutbox(id) {
 		url: base_url+'Outbox/delete',
 		type:'POST',
 		data:data,
-		success:function(result) {
-
+		success:function(data, textStatus, xhr) {
+			outboxTotal -= 1;
 			$('#outbox'+id).remove();
-		},
-		complete:function() {
-			$.LoadingOverlay('hide');
+			$('#outboxTotal1').html(outboxTotal);
+			$.LoadingOverlay("text", outboxTotal+" remaining.");
 		}
 	});
 }
@@ -50,6 +64,8 @@ function deleteOutbox(id) {
 $(function() {
 
 	let html = "";
+
+	$('#sendingStatus').hide();
 
 	$.ajax({
 		url:base_url+'Outbox/getAll',
@@ -67,23 +83,32 @@ $(function() {
 					html += "<td><span id='outboxStatus"+val.id+"'></span></td>";
 				html += "</tr>";
 
+				outboxTotal += 1;
 			});
 
 			$('#outboxBody').html(html);
+			$('#outboxTotal1').html(outboxTotal);
 		}
 	});
 
+	$(document).ajaxStop(function() {
+		$.LoadingOverlay('hide');
+	});
 
 	$('#removeOutboxBtn').click(function() {
 
-		$.LoadingOverlay('show');
+		 $.LoadingOverlay("show",{
+		 	image       : "",
+		 	text        : "Deleting outbox"
+		 });
+		$('#sendingStatus').hide();
 
 		$("input:checkbox[name=outboxId]:checked").each(function(){
 			
 			let selectedIndex = $(this).val();
-
 			deleteOutbox(selectedIndex);
 		});
+
 
 	});
 
@@ -91,6 +116,8 @@ $(function() {
 
 		$('#sendFromOutboxBtn').attr('disabled',true);
 		$('#removeOutboxBtn').attr('disabled',true);
+		$('#outboxTotal').hide();
+		$('#sendingStatus').show();
 
 		$("input:checkbox[name=outboxId]:checked").each(function(index, val) {
 			
@@ -98,8 +125,14 @@ $(function() {
 			let cpNumber = $(this).data('cpnumber');
 			let message = $(this).data('message');
 
-			toSend(id,cpNumber,message);
+			toSendArr.push([id,cpNumber,message]);
+
+			// toSend(id,cpNumber,message);
 		});
+
+
+		toSend(toSendArr[0][0],toSendArr[0][1],toSendArr[0][2],0,toSendArr.length,0);
+		$('#totalUnsent').html(toSendArr.length);
 	});
 
 

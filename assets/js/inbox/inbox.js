@@ -1,6 +1,27 @@
 var base_url = $('body').data('urlbase');
 var sms_address = 'http://192.168.1.92';
 
+function checkResponder() {
+
+	$.ajax({
+		url: base_url+'Responder/isOn',
+		success:function(result) {
+
+			let res = JSON.parse(result);
+			
+			if(res.message === 0) {
+				
+				setInterval(function() {
+					unreadMsg("");
+				},6000);
+
+			}else {
+				console.log("auto inbox off");
+			}
+		}
+	});
+};
+
 
 function unreadMsg(flag) {
 
@@ -132,10 +153,7 @@ $(function() {
 
 
 	readMsg();
-
-	setInterval(function() {
-		unreadMsg("");
-	},6000);
+	checkResponder();
 
 	$('#deleteMsg').click(function(){
 

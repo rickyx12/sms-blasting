@@ -40,6 +40,24 @@ class Responder extends CI_Controller {
 		echo json_encode($data);
 	}	
 
+	public function updateStatus() {
+
+		$responderId = $this->input->post('responderId');
+		$status = $this->input->post('status');
+		$updateStatus = null;
+
+		if($status == 1) {
+			$updateStatus = 0;
+		}else {
+			$updateStatus = 1;
+		}
+
+		$data = array($updateStatus,$responderId);
+		$this->responder_model->update($data);
+		$resp = array('status' => 'success','message' => 'Success');
+		echo json_encode($resp);
+	}
+
 	public function delete() {
 
 		$responderId = $this->input->post('responderId');
@@ -48,6 +66,33 @@ class Responder extends CI_Controller {
 
 		$data = array('status' => 'success', 'message' => 'Success');
 		echo json_encode($data);
+	}
+
+	public function isOn() {
+
+		$data = $this->responder_model->isOn()->num_rows();
+
+		if($data > 0) {
+			$result = array('status' => 'success', 'message' => 1);
+		}else {
+			$result = array('status' => 'success', 'message' => 0);
+		}
+
+		echo json_encode($result);
+	}
+
+	public function search() {
+
+		$keyword = $this->input->post('keyword');
+
+		if($this->responder_model->search($keyword)->num_rows() > 0) {
+			$data = $this->responder_model->search($keyword)->row()->reply;
+			$result = array('status' => 'success', 'message' => $data);
+		}else {
+			$result = array('status' => 'error', 'message' => 'null');
+		}
+
+		echo json_encode($result);
 	}
 
 	private function sendSMS($cpNumber,$message) {

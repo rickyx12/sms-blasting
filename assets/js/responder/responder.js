@@ -1,4 +1,5 @@
 var base_url = $('body').data('urlbase');
+var sms_address = 'http://192.168.1.92';
 
 function getKeyword() {
 
@@ -13,9 +14,10 @@ function getKeyword() {
 			$.each(res,function(index, val) {
 
 				html += "<tr>";
-					html += "<td><input type='checkbox' name='responderId' value='"+val.id+"'></td>";
+					html += "<td><input type='checkbox' name='responderId' value='"+val.id+"' data-status='"+val.status+"'></td>";
 					html += "<td>"+val.keywords+"</td>";
 					html += "<td>"+val.reply+"</td>";
+					html += "<td>"+val.status+"</td>"
 				html += "</tr>";	
 			});
 			
@@ -23,6 +25,25 @@ function getKeyword() {
 		},
 		complete: function() {
 			$.LoadingOverlay('hide');
+		}
+	});
+
+}
+
+
+function updateResponder(responderId,status) {
+
+	let data = {
+		responderId: responderId,
+		status:status
+	};
+
+	$.ajax({
+		url: base_url+'Responder/updateStatus',
+		type:'POST',
+		data:data,
+		complete:function(result) {
+			getKeyword();
 		}
 	});
 
@@ -76,6 +97,20 @@ $(function() {
 		});
 	});
 
+
+	$('#updateResponderBtn').click(function(){
+
+		$.LoadingOverlay('show');
+
+		$("input:checkbox[name=responderId]:checked").each(function(){
+		    
+		    let selectedIndex = $(this).val();
+		    var status = $(this).data('status');
+
+		    updateResponder(selectedIndex,status);
+		});
+
+	});
 
 	$('#deleteResponderBtn').click(function() {
 

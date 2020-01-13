@@ -10,6 +10,7 @@
       </ol>
       <div class="row">
         <div class="col-md-12 text-right mb-2">
+          <button id="updateResponderBtn" class="btn btn-info mr-1"><i class="fa fa-check"></i> Update</button>
           <button id="deleteResponderBtn" class="btn btn-danger mr-1"><i class="fa fa-trash"></i> Delete</button>
           <button class="btn btn-success" data-toggle="modal" data-target="#addModal"><i class="fa fa-plus"></i> New</button>
         </div>
@@ -22,6 +23,7 @@
                   <th width="3%"></th>
                   <th width="20%">Keyword</th>
                   <th>Reply</th>
+                  <th width="5%;"></th>
                 </tr>
               </thead>
               <tbody id="responderBody"></tbody>

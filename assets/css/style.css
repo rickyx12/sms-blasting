@@ -34,3 +34,15 @@ a.links:hover {
 .remainChar {
 	padding-top:30px;
 }
+
+.responderOn {
+	color:#FFFFFF;
+}
+
+#responderIndicator {
+	margin-right: 50px;
+}
+
+#sendingStatus {
+	color: #008000;
+}

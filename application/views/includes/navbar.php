@@ -8,6 +8,7 @@
 
   <!-- Navbar Search -->
   <form class="d-none d-md-inline-block form-inline ml-auto mr-0 mr-md-3 my-2 my-md-0">
+    <i id="responderIndicator" class="fa fa-satellite-dish"></i>
     <a href="#" class="navbar-status">Network: <span id="network"></span></a>
     <a href="#" class="navbar-status">My Number: <span id="phoneNumber"></span></a>
     <a href="#" class="navbar-status">Signal: <span id="signal"></span></a>

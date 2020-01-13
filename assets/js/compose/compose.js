@@ -1,6 +1,7 @@
 
 var base_url = $('body').data('urlbase');
-
+var totalMember = 0;
+var addedToOutbox = 0;
 var toSendArr = [];
 
 
@@ -14,6 +15,8 @@ function replaceAll(str, find, replace) {
 
 function sendToOutbox(cpNumber, name, message) {
 
+	$('#outboxModal').modal('toggle');
+
 	let data = {
 		cpNumber:cpNumber,
 		name:name,
@@ -25,17 +28,21 @@ function sendToOutbox(cpNumber, name, message) {
 		type:'POST',
 		data:data,
 		success:function(result) {
-			
+			addedToOutbox += 1;
+			$.LoadingOverlay("text", addedToOutbox+"/"+totalMember+" added to Outbox.");
 		},
 		complete:function() {
-			$('#outboxModal').modal('toggle');
-			$('#sendOutboxBtn').attr('disabled',false);
-			$('#cancelOutboxBtn').attr('disabled',false);
-			$('#message').val("");
-			$.LoadingOverlay("hide");
+
 		} 
 	});	
 
+	$(document).ajaxStop(function() {
+		// $('#outboxModal').modal('toggle');
+		$('#sendOutboxBtn').attr('disabled',false);
+		$('#cancelOutboxBtn').attr('disabled',false);
+		$('#message').val("");		
+		$.LoadingOverlay("hide");
+	});
 
 }
 
@@ -60,7 +67,7 @@ function getGroupMember(groupId,message) {
 
 				let fixFormat = replaceAll(message,"[[x]]",val.name);
 
-				// toSendArr.push([val.name, val.contact, fixFormat]);
+				totalMember += 1;
 				
 				setTimeout(function() {
 					sendToOutbox(val.contact, val.name, fixFormat);
@@ -160,12 +167,16 @@ $(function(){
 
 	$('#sendOutboxBtn').click(function() {
 
-		$.LoadingOverlay("show");
+		$.LoadingOverlay("show",{
+			image: "",
+			text: "Sending to outbox."
+		});
 
 		$('#sendOutboxBtn').attr('disabled',true);
 		$('#cancelOutboxBtn').attr('disabled',true);
 
 		$("input:checkbox[name=groupId]:checked").each(function(){
+
 		    let selectedIndex = $(this).val();
 
 		    getGroupMember(selectedIndex, $('#message').val());
