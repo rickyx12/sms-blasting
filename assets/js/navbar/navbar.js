@@ -238,8 +238,8 @@ $(function() {
 	getOperator();	
 	responderIndicator();
 
-	setInterval(function() {
-		getSignal();
-	},10000);
+	// setInterval(function() {
+	// 	getSignal();
+	// },10000);
 
 });
