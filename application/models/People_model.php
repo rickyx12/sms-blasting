@@ -107,4 +107,18 @@ class People_model extends CI_Model {
 		}
 		return $this->db->query($sql);
 	}
+
+	public function getPeopleByNumber($number) {
+
+		$sql = "
+		SELECT p.id, p.name, p.contact, gc.name as groups 
+		FROM people p 
+		LEFT JOIN groupcontact gc 
+		ON p.group_contact = gc.id
+		WHERE p.contact = '".$number."'
+		AND p.status = 1";
+
+		return $this->db->query($sql);
+	}
+
 }

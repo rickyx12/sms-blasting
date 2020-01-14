@@ -129,27 +129,16 @@ function sendSMS(number,message) {
 
 
 $(function(){
-	
-	let remainChar = 160;
+
 
 	getGroups();
 
-	$('#message').keyup(function(e){
+    $('#message').keyup(function() {
+        var text_length = $('#message').val().length;
+        var text_remaining = 160 - text_length;
 
-		if(remainChar != 0) {
-
-			if(e.keyCode == 8)	{
-
-				remainChar += 1;
-				$('#remainChar').html(remainChar);			
-			}else {
-
-				remainChar -= 1;
-				$('#remainChar').html(remainChar);
-			}
-		}
-
-	});
+        $('#remainChar').html(text_remaining);
+    });
 
 	$('#sendBtn').click(function() {
 

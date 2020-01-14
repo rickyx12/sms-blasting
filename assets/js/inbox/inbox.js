@@ -1,6 +1,31 @@
 var base_url = $('body').data('urlbase');
 var sms_address = 'http://192.168.1.92';
 
+function checkName(index,number) {
+
+	let formatNumber = number.replace("+63","");
+
+	let data = {
+		number:formatNumber
+	};
+
+	$.ajax({
+		url: base_url+'People/getPeopleByNumber',
+		type:'POST',
+		data:data,
+		success:function(result) {
+			
+			let res = JSON.parse(result);	
+
+			if(res.groups !== "") {
+			$('#inboxSender'+index).html("<span id='senderName"+index+"'>"+res.name+"</span><br><span id='senderContact"+index+"' style='font-size:13px'>+63"+res.contact+"</span><br><span style='font-size:13px'>"+res.groups+"</span>");
+			}else {
+				$('#inboxSender').html(res.name+"<br><span style='font-size:13px'>+63"+res.contact+"</span>");
+			}
+		}
+	});
+};
+
 function checkResponder() {
 
 	$.ajax({
@@ -127,20 +152,59 @@ function getSpecificMessage(index, status) {
 			}
 
 
+			$(document).on('click','#viewBtn'+index,function(){
+
+				let sender = $(this).data('cpnumber');
+				let msgTime = $(this).data('time');
+				let msgDate = $(this).data('date');
+				let message = $(this).data('message');
+
+				let textMax = 160;
+
+				if($('#senderName'+index).length) {
+					$('#readMsgModalHeader').html($('#senderName'+index).text()+"  <span style='font-size:15px;'>("+$('#senderContact'+index).text()+")</span>");
+					console.log("wowow: "+$('#senderName'+index).text());
+				}else {
+					$('#readMsgModalHeader').html(sender);
+				}
+
+
+				$('#readMsgModalField').val(message);
+				let sanitizeReplyToNumber = sender.replace("+63","");
+				$('#replyToNumber').val(sanitizeReplyToNumber);
+
+			    $('#replyMsgModalField').keyup(function() {
+			        var text_length = $('#replyMsgModalField').val().length;
+			        var text_remaining = textMax - text_length;
+
+			        $('#replyMsgLeftChar').html(text_remaining);
+			    });
+
+			});
+
+
+			checkName(index,sanitizeMessageSender);
+
 			if(status === "new") {
+
 				html += "<tr id='inbox"+index+"'>";
 					html += "<td><input type='checkbox' name='index' value='"+index+"'></td>";
-					html += "<td class='inbox-msg'><b><a href='#' class='inbox-btn'>"+sanitizeMessageSender+"</a></b></td>";
+					html += "<td class='inbox-msg'><b><a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></b></td>";
 					html += "<td class='inbox-msg'><b><a href='#' class='inbox-btn'>"+sanitizeMessageTime+" - "+sanitizeMessageDate+"</a></b></td>";
 					html += "<td class='inbox-msg'><b><a href='#' class='inbox-btn'>"+messageContent+"</a></b></td>";
+					html += "<td class='inbox-msg'><button id='viewBtn"+index+"' class='btn btn-info' data-cpnumber='"+sanitizeMessageSender+"' data-time='"+sanitizeMessageTime+"' data-date='"+sanitizeMessageDate+"' data-message='"+messageContent+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
 				html += "</tr>";
+
 			}else {
+
 				html += "<tr id='inbox"+index+"'>";
 					html += "<td><input type='checkbox' name='index' value='"+index+"'></td>";
-					html += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+sanitizeMessageSender+"</a></td>";
+					html += "<td class='inbox-msg'><a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></td>";
 					html += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+sanitizeMessageTime+" - "+sanitizeMessageDate+"</a></td>";
 					html += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+messageContent+"</a></td>";
+					html += "<td class='inbox-msg'><button id='viewBtn"+index+"' class='btn btn-info' data-cpnumber='"+sanitizeMessageSender+"' data-time='"+sanitizeMessageTime+"' data-date='"+sanitizeMessageDate+"' data-message='"+messageContent+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
 				html += "</tr>";				
+
 			}
 
 
@@ -155,7 +219,7 @@ $(function() {
 	readMsg();
 	checkResponder();
 
-	$('#deleteMsg').click(function(){
+	$('#deleteMsg').click(function() {
 
 		$.LoadingOverlay('show');
 
@@ -176,6 +240,37 @@ $(function() {
 		    });
 
 		});		
+	});
+
+	$('#replyBtn').click(function() {
+
+		$('#replyMsgModalField').LoadingOverlay("show");
+
+		$('#replyCloseBtn').attr('disabled',true);
+		$('#replyBtn').attr('disabled',true);
+
+		let number = $('#replyToNumber').val();
+		let reply = $("#replyMsgModalField").val();
+
+		let data = {
+			cpNumber: number,
+			message: reply
+		};
+
+		$.ajax({
+			url: base_url+"Outbox/toSend",
+			type:'POST',
+			data:data,
+			success:function(data, textStatus, xhr) {
+
+				if(xhr.status == 200) {
+					$('#replyMsgModalField').LoadingOverlay("hide");
+					$('#viewModal').modal('toggle');
+					$('#replyCloseBtn').attr('disabled',false);
+					$('#replyBtn').attr('disabled',false);					
+				}
+			}
+		});
 
 	});
 
