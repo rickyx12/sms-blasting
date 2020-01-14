@@ -16,8 +16,14 @@ function toSend(id,cpNumber, message,index,end,sent) {
 		success:function(data, textStatus, xhr) {
 
 			if(xhr.status == 200) {
-				$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
-				$('#totalSent').html(sent);
+
+				if(data !== "") {
+					$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
+					$('#totalSent').html(sent);
+				}else {
+					$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
+					$('#totalSent').html(sent-1);
+				}
 
 				if(index !== end) {
 					toSend(toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index+1,toSendArr.length,sent+1);
