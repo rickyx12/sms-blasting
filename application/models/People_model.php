@@ -20,7 +20,16 @@ class People_model extends CI_Model {
 		if($length != null || $length != "") {
 
 			if($search1 != "") {
-				$sql = "SELECT * FROM people WHERE name LIKE '".$search1."%' AND status = 1 ORDER BY id DESC LIMIT ".$start1.",".$length1;
+				
+				$sql = "
+				SELECT p.id, p.name, p.contact, gc.name as groups 
+				FROM people p 
+				LEFT JOIN groupcontact gc 
+				ON p.group_contact = gc.id
+				WHERE p.name LIKE '".$search1."%'
+				AND p.status = 1 
+				ORDER BY p.id DESC 
+				LIMIT ".$start1.",".$length1;
 			}else{
 				
 				$sql = "
