@@ -18,11 +18,19 @@ function toSend(id,cpNumber, message,index,end,sent) {
 			if(xhr.status == 200) {
 
 				if(data !== "") {
-					$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
-					$('#totalSent').html(sent);
+
+					if(data.trim() !== "ERROR") {
+						console.log(data);
+						$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
+						$('#totalSent').html(sent);
+					}else {
+						$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
+						$('#totalSent').html(sent-1);
+					}
 				}else {
 					$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
 					$('#totalSent').html(sent-1);
+					toSend(toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index,toSendArr.length,sent);
 				}
 
 				if(index !== end) {
