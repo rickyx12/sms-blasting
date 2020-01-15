@@ -9,7 +9,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>Default Template</title>
+  <title>Text Blast</title>
 
 
   <link rel="shortcut icon" href="<?= base_url('assets/img/favicon.ico') ?>" type="image/x-icon">
@@ -28,7 +28,14 @@
 
     <div class="card card-login mx-auto mt-5">
       <div class="card-header">Login</div>
-      <div class="card-body">
+      <div class="card-body pt-0">
+
+          <div class="row">
+            <div class="col-md-12 mt-4 mb-4 text-center">
+              <img src="<?= base_url("assets/img/sbt.png") ?>" height="100" width="100">
+            </div>
+          </div> 
+
           <form method="POST" action="<?= base_url('Account/loginNow') ?>">
             <div class="form-group">
               <div class="form-label-group">

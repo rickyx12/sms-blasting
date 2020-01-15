@@ -9,7 +9,7 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <title>Blasting</title>
+  <title>Text Blast</title>
 
   <link rel="shortcut icon" href="<?= base_url('assets/img/sbt.ico') ?>" type="image/x-icon">
   <link rel="icon" href="<?= base_url('assets/img/sbt.ico') ?>" type="image/x-icon">
