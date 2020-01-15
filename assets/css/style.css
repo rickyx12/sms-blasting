@@ -31,6 +31,12 @@ a.links:hover {
 	margin-right: 50px;
 }
 
+.navbar-status:hover {
+	color:#FFFFFF;
+	margin-right: 50px;
+	text-decoration: none;
+	font-weight: bold;
+}
 .remainChar {
 	padding-top:30px;
 }

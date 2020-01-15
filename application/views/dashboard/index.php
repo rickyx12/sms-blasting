@@ -13,7 +13,7 @@
         <?php foreach($groups as $group): ?>
            <div class="col-md-4 mb-3">
             <div class="card">
-              <div class="card-header"><?= $group['name'] ?></div>
+              <div class="card-header"><i class="fa fa-list"></i> <?= $group['name'] ?></div>
               <a href="<?= base_url('Dashboard/group?groupId='.$group['id'].'&groupName='.$group['name']) ?>" class="links">
                 <div class="row">
                     <div class="col-md-6">

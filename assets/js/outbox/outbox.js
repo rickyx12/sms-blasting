@@ -20,7 +20,6 @@ function toSend(id,cpNumber, message,index,end,sent) {
 				if(data !== "") {
 
 					if(data.trim() !== "ERROR") {
-						console.log(data);
 						$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
 						$('#totalSent').html(sent);
 					}else {

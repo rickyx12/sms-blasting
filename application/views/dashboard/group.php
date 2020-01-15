@@ -46,7 +46,8 @@
           </table>
         </div>
         <div class="col-md-6 text-right">
-          <textarea id="message" class="form-control" rows="10"></textarea>
+          <span id="dashboardLeftChar">160</span>/160
+          <textarea id="message" class="form-control" rows="10" maxlength="160"></textarea>
           <button id="sendBtn" class="btn btn-success mt-3">Send</button>
         </div>
       </div>
