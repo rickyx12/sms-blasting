@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand navbar-dark bg-dark fixed-top">
+<nav class="navbar navbar-expand navbar-dark bg-dark static-top">
 
   <a class="navbar-brand mr-1" href="index.html"><img id="logo" src="<?= base_url('assets/img/sbt.png') ?>"></a>
   <span id="logoTitle">ext Blast</span>
