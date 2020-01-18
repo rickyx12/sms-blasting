@@ -16,11 +16,12 @@
               <span id="inboxStatus"></span>
             </div>
             <div class="col-md-6 text-right mb-2">
+              <button id="saveMsg" class="btn btn-success btn-sm"><i class="fa fa-save"></i> Save</button>
               <button id="deleteMsg" class="btn btn-danger btn-sm"><i class="fa fa-trash"></i> Delete</button>
             </div>
           </div>
 
-          <table id="inboxTbl" class="table table-bordered">
+          <table id="inboxTbl" class="table table-bordered table-striped">
             <thead>
               <tr>
                 <th width="3%"></th>

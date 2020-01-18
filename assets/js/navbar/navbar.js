@@ -28,7 +28,6 @@ function getSignal() {
 			let res2 = res1.split(",");
 			let signalStrength = res2[0].replace("+CSQ:","");
 
-			console.log(signalStrength);
 			$('#signal').html(signalStrength);
 		},
 		error:function() {

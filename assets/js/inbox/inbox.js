@@ -17,10 +17,13 @@ function checkName(index,number) {
 			
 			let res = JSON.parse(result);	
 
-			if(res.groups !== "") {
-			$('#inboxSender'+index).html("<span id='senderName"+index+"'>"+res.name+"</span><br><span id='senderContact"+index+"' style='font-size:13px'>+63"+res.contact+"</span><br><span style='font-size:13px'>"+res.groups+"</span>");
+			if(res) {
+					$('#inboxSender'+index).html("<span id='senderName"+index+"'>"+res.name+"</span><br><span id='senderContact"+index+"' style='font-size:13px'>+63"+res.contact+"</span><br><span style='font-size:13px'>"+res.groups+"</span>");
 			}else {
-				$('#inboxSender').html(res.name+"<br><span style='font-size:13px'>+63"+res.contact+"</span>");
+
+				if(res) {
+					$('#inboxSender').html(res.name+"<br><span style='font-size:13px'>+63"+res.contact+"</span>");
+				}
 			}
 		}
 	});
@@ -163,7 +166,6 @@ function getSpecificMessage(index, status) {
 
 				if($('#senderName'+index).length) {
 					$('#readMsgModalHeader').html($('#senderName'+index).text()+"  <span style='font-size:15px;'>("+$('#senderContact'+index).text()+")</span>");
-					console.log("wowow: "+$('#senderName'+index).text());
 				}else {
 					$('#readMsgModalHeader').html(sender);
 				}
@@ -188,8 +190,8 @@ function getSpecificMessage(index, status) {
 			if(status === "new") {
 
 				html += "<tr id='inbox"+index+"'>";
-					html += "<td><input type='checkbox' name='index' value='"+index+"'></td>";
-					html += "<td class='inbox-msg'><b><a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></b></td>";
+					html += "<td><input type='checkbox' name='index' data-sender='"+sanitizeMessageSender+"' data-timerec='"+sanitizeMessageTime+"' data-daterec='"+sanitizeMessageDate+"' data-message='"+messageContent+"' value='"+index+"' data-storage='simcard'></td>";
+					html += "<td class='inbox-msg'><i class='fa fa-sim-card'></i> <b><a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></b></td>";
 					html += "<td class='inbox-msg'><b><a href='#' class='inbox-btn'>"+sanitizeMessageTime+" - "+sanitizeMessageDate+"</a></b></td>";
 					html += "<td class='inbox-msg'><b><a href='#' class='inbox-btn'>"+messageContent+"</a></b></td>";
 					html += "<td class='inbox-msg'><button id='viewBtn"+index+"' class='btn btn-info' data-cpnumber='"+sanitizeMessageSender+"' data-time='"+sanitizeMessageTime+"' data-date='"+sanitizeMessageDate+"' data-message='"+messageContent+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
@@ -198,8 +200,8 @@ function getSpecificMessage(index, status) {
 			}else {
 
 				html += "<tr id='inbox"+index+"'>";
-					html += "<td><input type='checkbox' name='index' value='"+index+"'></td>";
-					html += "<td class='inbox-msg'><a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></td>";
+					html += "<td><input type='checkbox' name='index' data-sender='"+sanitizeMessageSender+"' data-timerec='"+sanitizeMessageTime+"' data-daterec='"+sanitizeMessageDate+"' data-message='"+messageContent+"' value='"+index+"' data-storage='simcard'></td>";
+					html += "<td class='inbox-msg'><i class='fa fa-sim-card'></i> <a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></td>";
 					html += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+sanitizeMessageTime+" - "+sanitizeMessageDate+"</a></td>";
 					html += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+messageContent+"</a></td>";
 					html += "<td class='inbox-msg'><button id='viewBtn"+index+"' class='btn btn-info' data-cpnumber='"+sanitizeMessageSender+"' data-time='"+sanitizeMessageTime+"' data-date='"+sanitizeMessageDate+"' data-message='"+messageContent+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
@@ -213,10 +215,109 @@ function getSpecificMessage(index, status) {
 	});
 }
 
+function getSystemInbox() {
+
+	let systemHTML = "";
+
+	$.ajax({
+		url: base_url+'/Inbox/showAll',
+		success:function(data, textStatus, xhr) {
+
+			let res = JSON.parse(data);
+			
+			$.each(res,function(index, val) {
+
+				checkName(val.id, val.sender);
+
+				$(document).on('click','#viewBtn'+val.id,function(){
+
+					let sender = $(this).data('cpnumber');
+					let msgTime = $(this).data('time');
+					let msgDate = $(this).data('date');
+					let message = $(this).data('message');
+
+					let textMax = 160;
+
+					if($('#senderName'+val.id).length) {
+						$('#readMsgModalHeader').html($('#senderName'+val.id).text()+"  <span style='font-size:15px;'>("+$('#senderContact'+val.id).text()+")</span>");
+					}else {
+						$('#readMsgModalHeader').html(sender);
+					}
+
+
+					$('#readMsgModalField').val(message);
+					let sanitizeReplyToNumber = sender.replace("+63","");
+					$('#replyToNumber').val(sanitizeReplyToNumber);
+
+				    $('#replyMsgModalField').keyup(function() {
+				        var text_length = $('#replyMsgModalField').val().length;
+				        var text_remaining = textMax - text_length;
+
+				        $('#replyMsgLeftChar').html(text_remaining);
+				    });
+
+				});
+
+				systemHTML += "<tr id='inbox"+val.id+"' class='systemInbox'>";
+					systemHTML += "<td><input type='checkbox' name='index' data-storage='system' value='"+val.id+"'></td>";
+					systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn'>"+val.sender+"</a></td>";
+					systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.received+"</a></td>";
+					systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.messages+"</a></td>";
+					systemHTML += "<td class='inbox-msg'><button id='viewBtn"+val.id+"' class='btn btn-info' data-cpnumber='"+val.sender+"' data-message='"+val.messages+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
+				systemHTML += "</tr>";
+			});	
+
+			$('.inboxBody').prepend(systemHTML);
+		}
+	});
+
+}
+
+function deleteSMS(index) {
+
+    $.ajax({
+    	url: sms_address+'/delete_msg?index='+index,
+    	success:function(result) {
+
+    		if(result.includes("OK")) {
+    			$('#inbox'+index).remove("#inbox"+index);
+    		}
+    	},
+    	complete:function() {
+    		$.LoadingOverlay('hide');
+    	}
+    });
+
+}
+
+function deleteSystemSMS(index) {
+
+	let data = {
+		id: index
+	};
+
+    $.ajax({
+    	url: base_url+'/Inbox/delete',
+    	type:'POST',
+    	data:data,
+    	success:function(result) {
+
+    		if(result.includes("OK")) {
+    			$('#inbox'+index).remove("#inbox"+index);
+    		}
+    	},
+    	complete:function() {
+    		$.LoadingOverlay('hide');
+    	}
+    });
+
+}
+
 $(function() {
 
 
 	readMsg();
+	getSystemInbox();
 	checkResponder();
 
 	$('#deleteMsg').click(function() {
@@ -224,22 +325,60 @@ $(function() {
 		$.LoadingOverlay('show');
 
 		$("input:checkbox[name=index]:checked").each(function(){
+		    
 		    let selectedIndex = $(this).val();
+		    let storage = $(this).data('storage');
+
+		    if(storage === "simcard") {
+		    	deleteSMS(selectedIndex);
+			}else {
+				deleteSystemSMS(selectedIndex);
+			}
+		});		
+	});
+
+
+	$('#saveMsg').click(function() {
+
+		$("input:checkbox[name=index]:checked").each(function() {
+		    let selectedIndex = $(this).val();
+		    let getSender = $(this).data('sender');
+		    let timeRec = $(this).data('timerec');
+		    let dateRec = $(this).data('daterec');
+		    let getMessage = $(this).data('message');
+
+		    let data = {
+		    	index: selectedIndex,
+		    	sender: getSender,
+		    	message: getMessage,
+		    	timeRec: timeRec,
+		    	dateRec: dateRec,
+		    	isRead: 1
+		    };
 
 		    $.ajax({
-		    	url: sms_address+'/delete_msg?index='+selectedIndex,
-		    	success:function(result) {
-
-		    		if(result.includes("OK")) {
-		    			$('#inbox'+selectedIndex).remove("#inbox"+selectedIndex);
-		    		}
+		    	url: base_url+'/Inbox/saveMessage',
+		    	type:'POST',
+		    	data:data,
+		    	beforeSend:function() {
+		    		$.LoadingOverlay('show');
 		    	},
-		    	complete:function() {
-		    		$.LoadingOverlay('hide');
+		    	success:function(data, textStatus, xhr) {
+
+		    		let res = JSON.parse(data);
+
+		    		if(xhr.status == 200) {
+
+		    			deleteSMS(res.message);
+		    			$('.systemInbox').remove();
+		    			getSystemInbox();
+		    		}else {
+
+		    			console.log('saving SMS Failed');
+		    		}
 		    	}
 		    });
-
-		});		
+		});
 	});
 
 	$('#replyBtn').click(function() {
