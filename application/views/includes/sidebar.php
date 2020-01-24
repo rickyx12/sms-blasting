@@ -3,6 +3,18 @@
     <!-- Sidebar -->
     <ul class="sidebar navbar-nav">
 
+      <?php if($page == "information-nav"): ?>
+        <li id="information-nav" class="nav-item active">
+      <?php else: ?>
+        <li id="information-nav" class="nav-item">
+      <?php endif; ?>
+
+        <a id="information" class="nav-link" href="<?= base_url('Information/index') ?>">
+          <i class="fas fa-fw fa-info-circle"></i>
+          <span>Information</span>
+        </a>
+      </li>
+
       <?php if($page == "dashboard-nav"): ?>
         <li id="dashboard-nav" class="nav-item active">
       <?php else: ?>

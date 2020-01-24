@@ -1,7 +1,86 @@
 var base_url = $('body').data('urlbase');
-var sms_address = 'http://192.168.1.92';
+// var sms_address = 'http://192.168.1.92';
 
-function checkName(index,number) {
+
+function saveMessage(sms_address, index, cpNumber, message, timeRec, dateRec, messageType) {
+
+    let data = {
+    	cpNumber: cpNumber,
+    	message: message,
+    	timeRec: timeRec,
+    	dateRec: dateRec,
+    	messageType: messageType,
+    	isRead: 0
+    };
+
+    $.ajax({
+    	url: base_url+'/Inbox/saveMessage',
+    	type:'POST',
+    	data:data,
+    	beforeSend:function() {
+    		$.LoadingOverlay('show');
+    	},
+    	success:function(data, textStatus, xhr) {
+
+    		$.LoadingOverlay('hide');
+    		let res = JSON.parse(data);
+
+    		if(xhr.status == 200) {
+    			deleteSMS(sms_address,index);
+    		}else {
+
+    			console.log('saving SMS Failed');
+    		}
+    	}
+    });
+}
+
+
+
+function saveSent(cpNumber, message, thread) {
+
+	let data = {
+		cpNumber: "+63"+cpNumber,
+		message: message,
+		thread: thread
+	};
+
+	$.ajax({
+		url: base_url+'/Inbox/save_sent',
+		type:'POST',
+		data:data,
+		success:function(data, textStatus, xhr) {
+
+			if(textStatus == 200) {
+				console.log('ok');
+			}
+
+		}
+	});
+}
+
+function markedRead(thread) {
+
+	let data = {
+		thread: thread
+	};
+
+	$.ajax({
+		url: base_url+'Inbox/marked_read',
+		type:'POST',
+		data:data,
+		success:function(data, textStatus, xhr) {
+
+			if(xhr.status == 200) {
+
+				$('.unread'+thread).removeClass('unread-msg');			
+			}
+		}
+	});
+
+}
+
+function checkName(index,thread,number,isRead) {
 
 	let formatNumber = number.replace("+63","");
 
@@ -18,7 +97,13 @@ function checkName(index,number) {
 			let res = JSON.parse(result);	
 
 			if(res) {
+
+				if(isRead == 0) {
+					$('#inboxSender'+index).html("<span id='senderName"+index+"' class='unread-msg unread"+thread+"'>"+res.name+"</span><br><span id='senderContact"+index+"' class='unread-msg unread"+thread+"' style='font-size:13px'>+63"+res.contact+"</span><br><span class='unread-msg unread"+thread+"' style='font-size:13px'>"+res.groups+"</span>");
+				}else {
 					$('#inboxSender'+index).html("<span id='senderName"+index+"'>"+res.name+"</span><br><span id='senderContact"+index+"' style='font-size:13px'>+63"+res.contact+"</span><br><span style='font-size:13px'>"+res.groups+"</span>");
+				}
+			
 			}else {
 
 				if(res) {
@@ -29,7 +114,7 @@ function checkName(index,number) {
 	});
 };
 
-function checkResponder() {
+function checkResponder(sms_address) {
 
 	$.ajax({
 		url: base_url+'Responder/isOn',
@@ -40,7 +125,7 @@ function checkResponder() {
 			if(res.message === 0) {
 				
 				setInterval(function() {
-					unreadMsg("");
+					unreadMsg(sms_address, "");
 				},6000);
 
 			}else {
@@ -51,14 +136,14 @@ function checkResponder() {
 };
 
 
-function unreadMsg(flag) {
+function unreadMsg(sms_address, flag) {
 
 	$.ajax({
 		url: sms_address+'/unread_msg',
 		beforeSend: function() {
 
 			if(flag === "show") {
-				$('#inboxStatus').html("Checking for new messages.");
+				$('#inboxStatus').html("");
 			}
 		},
 		success:function(result) {
@@ -69,14 +154,14 @@ function unreadMsg(flag) {
 
 			for(let i = 0; i < indexesArr.length; i++) {
 				// console.log(revIndexesArr[i][2]);
-				getSpecificMessage(revIndexesArr[i][2],"new");
+				getSpecificMessage(sms_address,revIndexesArr[i][2],"new");
 			}
 		}
 	});	
 
 }
 
-function readMsg() {
+function readMsg(sms_address) {
 
 	$.ajax({
 		url: sms_address+'/read_msg',
@@ -91,23 +176,22 @@ function readMsg() {
 
 			for(let i = 0; i < indexesArr.length; i++) {
 				// console.log(revIndexesArr[i][2]);
-				getSpecificMessage(revIndexesArr[i][2],"old");
+				getSpecificMessage(sms_address,revIndexesArr[i][2],"old");
 			}
 
 		},
 		complete:function(result) {
-			unreadMsg("show");
+			unreadMsg(sms_address,"show");
 		}		
 	});	
-
 }
 
-function getSpecificMessage(index, status) {
+function getSpecificMessage(sms_address ,index, status) {
 
 	let inbox = [];
 	let html = "";
 
-	$('#inboxStatus').html("Reading inbox.");
+	$('#inboxStatus').html("Incoming messages.");
 
 	$.ajax({
 		url: sms_address+'/specific_msg?index='+index,
@@ -154,65 +238,68 @@ function getSpecificMessage(index, status) {
 				messageContent += "&nbsp;&nbsp;"+splitByNewLine[7];
 			}
 
-
-			$(document).on('click','#viewBtn'+index,function(){
-
-				let sender = $(this).data('cpnumber');
-				let msgTime = $(this).data('time');
-				let msgDate = $(this).data('date');
-				let message = $(this).data('message');
-
-				let textMax = 160;
-
-				if($('#senderName'+index).length) {
-					$('#readMsgModalHeader').html($('#senderName'+index).text()+"  <span style='font-size:15px;'>("+$('#senderContact'+index).text()+")</span>");
-				}else {
-					$('#readMsgModalHeader').html(sender);
-				}
-
-
-				$('#readMsgModalField').val(message);
-				let sanitizeReplyToNumber = sender.replace("+63","");
-				$('#replyToNumber').val(sanitizeReplyToNumber);
-
-			    $('#replyMsgModalField').keyup(function() {
-			        var text_length = $('#replyMsgModalField').val().length;
-			        var text_remaining = textMax - text_length;
-
-			        $('#replyMsgLeftChar').html(text_remaining);
-			    });
-
-			});
-
-
-			checkName(index,sanitizeMessageSender);
-
-			if(status === "new") {
-
-				html += "<tr id='inbox"+index+"'>";
-					html += "<td><input type='checkbox' name='index' data-sender='"+sanitizeMessageSender+"' data-timerec='"+sanitizeMessageTime+"' data-daterec='"+sanitizeMessageDate+"' data-message='"+messageContent+"' value='"+index+"' data-storage='simcard'></td>";
-					html += "<td class='inbox-msg'><i class='fa fa-sim-card'></i> <b><a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></b></td>";
-					html += "<td class='inbox-msg'><b><a href='#' class='inbox-btn'>"+sanitizeMessageTime+" - "+sanitizeMessageDate+"</a></b></td>";
-					html += "<td class='inbox-msg'><b><a href='#' class='inbox-btn'>"+messageContent+"</a></b></td>";
-					html += "<td class='inbox-msg'><button id='viewBtn"+index+"' class='btn btn-info' data-cpnumber='"+sanitizeMessageSender+"' data-time='"+sanitizeMessageTime+"' data-date='"+sanitizeMessageDate+"' data-message='"+messageContent+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
-				html += "</tr>";
-
-			}else {
-
-				html += "<tr id='inbox"+index+"'>";
-					html += "<td><input type='checkbox' name='index' data-sender='"+sanitizeMessageSender+"' data-timerec='"+sanitizeMessageTime+"' data-daterec='"+sanitizeMessageDate+"' data-message='"+messageContent+"' value='"+index+"' data-storage='simcard'></td>";
-					html += "<td class='inbox-msg'><i class='fa fa-sim-card'></i> <a href='#' id='inboxSender"+index+"' class='inbox-btn'>"+sanitizeMessageSender+"</a></td>";
-					html += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+sanitizeMessageTime+" - "+sanitizeMessageDate+"</a></td>";
-					html += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+messageContent+"</a></td>";
-					html += "<td class='inbox-msg'><button id='viewBtn"+index+"' class='btn btn-info' data-cpnumber='"+sanitizeMessageSender+"' data-time='"+sanitizeMessageTime+"' data-date='"+sanitizeMessageDate+"' data-message='"+messageContent+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
-				html += "</tr>";				
-
-			}
-
-
-			$('.inboxBody').prepend(html);
+			saveMessage(sms_address, index, sanitizeMessageSender, messageContent, sanitizeMessageTime, sanitizeMessageDate, 'inbound');
+			getSystemInbox();
 		}
 	});
+}
+
+
+function thread_messages(thread) {
+
+	let html = '';
+
+	let data = {
+		thread: thread
+	};
+
+	$('#replyCloseBtn').attr('disabled',true);
+	$('#replyBtn').attr('disabled',true);
+
+	$.ajax({
+		url: base_url+'Inbox/thread_messages',
+		type:'POST',
+		data:data,
+		success:function(data, textStatus, xhr) {
+
+			$('#messageDiv').LoadingOverlay('hide');
+
+			$('#replyCloseBtn').attr('disabled',false);		
+
+			if(xhr.status == 200) {
+
+				let res = JSON.parse(data);
+
+				$.each(res,function(index, val) {
+					html += "<div class='row mr-3 mt-3 mb-3'>";
+
+						if(val.message_type == "inbound") {
+							html += "<div class='col-md-6 speech-bubble-left'>";
+								html += "<span class='bubble-text'>"+val.messages+"<span>";
+								html += "<br>";
+								html += "<span class='bubble-rec'>"+val.received+"</span>"
+							html += "</div>"
+							html += "<div class='col-md-6'>";
+							html += "</div>";							
+						}else {
+							html += "<div class='col-md-6'>";
+							html += "</div>"
+							html += "<div class='col-md-6 speech-bubble-right'>";
+								html += "<span class='bubble-text'>"+val.messages+"<span>";
+								html += "<br>";
+								html += "<span class='bubble-rec'>"+val.received+"</span>"
+							html += "</div>"							
+						}
+					html += "</div>";
+				});				
+
+				$('#messageDiv').html(html);
+				$('#messageDiv').scrollTop($('#messageDiv')[0].scrollHeight);
+			}
+
+		}
+	});
+
 }
 
 function getSystemInbox() {
@@ -227,15 +314,22 @@ function getSystemInbox() {
 			
 			$.each(res,function(index, val) {
 
-				checkName(val.id, val.sender);
+				checkName(val.id, val.thread, val.cp_number, val.is_read);
 
-				$(document).on('click','#viewBtn'+val.id,function(){
+				$(document).on('click','#viewBtn'+val.id,function() {
 
 					let sender = $(this).data('cpnumber');
 					let msgTime = $(this).data('time');
 					let msgDate = $(this).data('date');
 					let message = $(this).data('message');
+					let thread = $(this).data('thread');
 
+					$('#messageDiv').html("");
+					$('#messageDiv').LoadingOverlay('show');
+
+					thread_messages(thread);
+					markedRead(thread);
+					
 					let textMax = 160;
 
 					if($('#senderName'+val.id).length) {
@@ -248,10 +342,17 @@ function getSystemInbox() {
 					$('#readMsgModalField').val(message);
 					let sanitizeReplyToNumber = sender.replace("+63","");
 					$('#replyToNumber').val(sanitizeReplyToNumber);
+					$('#replyThread').val(thread);
 
 				    $('#replyMsgModalField').keyup(function() {
 				        var text_length = $('#replyMsgModalField').val().length;
 				        var text_remaining = textMax - text_length;
+
+						if(text_remaining == 160) {
+							$('#replyBtn').attr('disabled',true);
+						}else {
+							$('#replyBtn').attr('disabled',false);
+						}
 
 				        $('#replyMsgLeftChar').html(text_remaining);
 				    });
@@ -260,20 +361,28 @@ function getSystemInbox() {
 
 				systemHTML += "<tr id='inbox"+val.id+"' class='systemInbox'>";
 					systemHTML += "<td><input type='checkbox' name='index' data-storage='system' value='"+val.id+"'></td>";
-					systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn'>"+val.sender+"</a></td>";
-					systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.received+"</a></td>";
-					systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.messages+"</a></td>";
-					systemHTML += "<td class='inbox-msg'><button id='viewBtn"+val.id+"' class='btn btn-info' data-cpnumber='"+val.sender+"' data-message='"+val.messages+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";
+					
+					if(val.is_read == 0) {
+						systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn unread-msg unread"+val.thread+"'>"+val.cp_number+"</a></td>";
+						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn unread-msg unread"+val.thread+"'>"+val.received+"</a></td>";
+						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn unread-msg unread"+val.thread+"'>"+val.messages+"</a></td>";
+						systemHTML += "<td class='inbox-msg'><button id='viewBtn"+val.id+"' class='btn btn-info' data-cpnumber='"+val.cp_number+"' data-thread='"+val.thread+"' data-message='"+val.messages+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";					
+					}else {
+						systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn'>"+val.cp_number+"</a></td>";	
+						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.received+"</a></td>";
+						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.messages+"</a></td>";
+						systemHTML += "<td class='inbox-msg'><button id='viewBtn"+val.id+"' class='btn btn-info' data-cpnumber='"+val.cp_number+"' data-thread='"+val.thread+"' data-message='"+val.messages+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";						
+					}
 				systemHTML += "</tr>";
 			});	
 
-			$('.inboxBody').prepend(systemHTML);
+			$('.inboxBody').html(systemHTML);
 		}
 	});
 
 }
 
-function deleteSMS(index) {
+function deleteSMS(sms_address, index) {
 
     $.ajax({
     	url: sms_address+'/delete_msg?index='+index,
@@ -316,9 +425,23 @@ function deleteSystemSMS(index) {
 $(function() {
 
 
-	readMsg();
+	$.ajax({
+		url: base_url+'/Config/smsDevice',
+		success:function(data, textStatus, xhr) {
+
+			if(xhr.status == 200) {
+
+				let res = JSON.parse(data);
+
+				$.each(res,function(index, val) {
+					readMsg("http://"+val.ipaddress);
+					checkResponder("http://"+val.ipaddress);
+				});
+			}		
+		}
+	});
+
 	getSystemInbox();
-	checkResponder();
 
 	$('#deleteMsg').click(function() {
 
@@ -327,59 +450,12 @@ $(function() {
 		$("input:checkbox[name=index]:checked").each(function(){
 		    
 		    let selectedIndex = $(this).val();
-		    let storage = $(this).data('storage');
 
-		    if(storage === "simcard") {
-		    	deleteSMS(selectedIndex);
-			}else {
-				deleteSystemSMS(selectedIndex);
-			}
+			deleteSystemSMS(selectedIndex);
+			
 		});		
 	});
 
-
-	$('#saveMsg').click(function() {
-
-		$("input:checkbox[name=index]:checked").each(function() {
-		    let selectedIndex = $(this).val();
-		    let getSender = $(this).data('sender');
-		    let timeRec = $(this).data('timerec');
-		    let dateRec = $(this).data('daterec');
-		    let getMessage = $(this).data('message');
-
-		    let data = {
-		    	index: selectedIndex,
-		    	sender: getSender,
-		    	message: getMessage,
-		    	timeRec: timeRec,
-		    	dateRec: dateRec,
-		    	isRead: 1
-		    };
-
-		    $.ajax({
-		    	url: base_url+'/Inbox/saveMessage',
-		    	type:'POST',
-		    	data:data,
-		    	beforeSend:function() {
-		    		$.LoadingOverlay('show');
-		    	},
-		    	success:function(data, textStatus, xhr) {
-
-		    		let res = JSON.parse(data);
-
-		    		if(xhr.status == 200) {
-
-		    			deleteSMS(res.message);
-		    			$('.systemInbox').remove();
-		    			getSystemInbox();
-		    		}else {
-
-		    			console.log('saving SMS Failed');
-		    		}
-		    	}
-		    });
-		});
-	});
 
 	$('#replyBtn').click(function() {
 
@@ -390,27 +466,46 @@ $(function() {
 
 		let number = $('#replyToNumber').val();
 		let reply = $("#replyMsgModalField").val();
+		let thread = $('#replyThread').val();
 
-		let data = {
-			cpNumber: number,
-			message: reply
-		};
 
 		$.ajax({
-			url: base_url+"Outbox/toSend",
-			type:'POST',
-			data:data,
-			success:function(data, textStatus, xhr) {
-
+			url: base_url+'Config/smsDevice',
+			success: function(data1, textStatus, xhr) {
+				
 				if(xhr.status == 200) {
-					$('#replyMsgModalField').LoadingOverlay("hide");
-					$('#viewModal').modal('toggle');
-					$('#replyCloseBtn').attr('disabled',false);
-					$('#replyBtn').attr('disabled',false);					
+
+					let res = JSON.parse(data1);
+					let defaultSMS = res[0].ipaddress;
+
+					let data = {
+						cpNumber: number,
+						message: reply,
+						sms:'http://'+defaultSMS
+					};
+
+					$.ajax({
+						url: base_url+"Outbox/toSend",
+						type:'POST',
+						data:data,
+						success:function(data, textStatus, xhr) {
+
+							if(xhr.status == 200) {
+								saveSent(number, reply, thread);
+								$('#replyMsgModalField').LoadingOverlay("hide");
+								$('#replyMsgModalField').val("");
+								// $('#viewModal').modal('toggle');
+								$('#replyCloseBtn').attr('disabled',false);
+								$('#replyBtn').attr('disabled',false);
+								$('#messageDiv').LoadingOverlay("show");
+								thread_messages(thread);
+							}
+						}
+					});
 				}
 			}
 		});
-
 	});
+
 
 });

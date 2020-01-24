@@ -48,20 +48,20 @@
               <div class="modal-body">
                 <div class="row">
                   <div class="col-md-12">
-                    <label>Message</label>
-                    <textarea id="readMsgModalField" cols="3" rows="5" readonly="readonly" class="form-control"></textarea>
+                    <div id="messageDiv"></div>
                   </div> 
                 </div>
                 <div class="row">
                   <div class="col-md-6">
-                    <label class="mt-3">Repply</label>
+                    <label class="mt-3">Reply</label>
                   </div>
                   <div class="col-md-6 mt-3 text-right">
                     <span id="replyMsgLeftChar">160</span>/160
                   </div>
                 </div>
-                <textarea id="replyMsgModalField" cols="3" rows="5" class="form-control" maxlength="160"></textarea>
+                <textarea id="replyMsgModalField" cols="3" rows="3" class="form-control" maxlength="160"></textarea>
                 <input type="hidden" id="replyToNumber">
+                <input type="hidden" id="replyThread">
               </div>
               <div class="modal-footer">
                 <button type="button" id="replyCloseBtn" class="btn btn-danger" data-dismiss="modal">Close</button>

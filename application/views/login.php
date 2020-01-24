@@ -21,7 +21,7 @@
   <link href="<?= base_url('assets/css/sb-admin.css') ?>" rel="stylesheet">
 </head>
 
-<body class="bg-dark">
+<body class="bg-dark" data-urlbase="<?= base_url() ?>">
 
   <div class="container">
 
@@ -67,10 +67,34 @@
   
   $(function(){
 
-    function startup() {
+    var base_url = $('body').data('urlbase');
+
+    $.ajax({
+      url: base_url+'Config/smsDevice',
+      success:function(data, textStatus, xhr) {
+
+        if(xhr.status == 200) {
+
+          let res = JSON.parse(data);
+          $.each(res,function(index, val) {
+
+            let id = val.id;
+            let alias = val.alias;
+            let ipaddress = val.ipaddress;
+            let delay = val.delay;
+
+            startup(ipaddress);
+          });
+
+        }
+      }
+
+    });
+
+    function startup(ipaddress) {
 
       $.ajax({
-        url: 'http://192.168.1.92/startup',
+        url: 'http://'+ipaddress+'/startup',
         beforeSend:function() {
           $.LoadingOverlay('show',{
               image: "",
@@ -86,8 +110,6 @@
       }); 
 
     }
-
-    startup();
 
   });
 

@@ -48,13 +48,13 @@ class Outbox extends CI_Controller {
 
 	}
 
-	private function sendSMS($cpNumber,$message) {
+	private function sendSMS($sms,$cpNumber,$message) {
 
 		//Initialize cURL.
 		$ch = curl_init();
 		 
 		//Set the URL that you want to GET by using the CURLOPT_URL option.
-		curl_setopt($ch, CURLOPT_URL, $this->config->item('sms_gateway').'action_page?cpNumber='.$cpNumber.'&message='.$message);
+		curl_setopt($ch, CURLOPT_URL,$sms.'/action_page?cpNumber='.$cpNumber.'&message='.$message);
 		 
 		//Set CURLOPT_RETURNTRANSFER so that the content is returned as a variable.
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -76,11 +76,17 @@ class Outbox extends CI_Controller {
 
 		$cpNumber = $this->input->post('cpNumber');
 		$message = $this->input->post('message');
+		$sms = $this->input->post('sms');
 
 		$cpNumber1 = urlencode($cpNumber);
 		$message1 = urlencode($message);	
 
-		echo $this->sendSMS($cpNumber1,$message1);
+		if($message == "") {
+			echo json_encode(array("status" => "error", "message" => "Pls enter a message"))
+		}else {
+			echo $this->sendSMS($sms,$cpNumber1,$message1);
+		}
+
 	}
 
 	public function getAll() {

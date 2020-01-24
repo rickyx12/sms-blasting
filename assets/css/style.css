@@ -63,3 +63,70 @@ a.links:hover {
 #sendingStatus {
 	color: #008000;
 }
+
+#messageDiv {
+	height: 350px;
+	width:100%;
+	border:1px solid #000000;
+	overflow-y: scroll;
+}
+
+.unread-msg {
+	font-weight: bold;
+}
+
+.speech-bubble-left {
+	position: relative;
+	background: #00aabb;
+	border-radius: .4em;
+	color:#FFFFFF;
+	margin-left: 7%;
+	margin-bottom: 1%;
+	padding-top: 3%;
+	padding-left: 3%;
+	padding-right: 3%;
+}
+
+.speech-bubble-left:after {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 0.625em solid transparent;
+	border-right-color: #00aabb;
+	border-left: 0;
+	margin-top: -0.625em;
+	margin-left: -0.625em;
+}
+
+.speech-bubble-right {
+	position: relative;
+	background: #00aabb;
+	border-radius: .4em;
+	color:#FFFFFF;
+	padding-top: 3%;
+}
+
+.speech-bubble-right:after {
+	content: '';
+	position: absolute;
+	right: 0;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 0.625em solid transparent;
+	border-left-color: #00aabb;
+	border-right: 0;
+	margin-top: -0.625em;
+	margin-right: -0.625em;
+}
+
+.bubble-text {
+	font-size:17px;
+}
+
+.bubble-rec {
+	font-size:11px;
+}
