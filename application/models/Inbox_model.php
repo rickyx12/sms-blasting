@@ -31,6 +31,13 @@ class Inbox_model extends CI_Model {
 		return $this->db->query($sql,$data);
 	}
 
+	public function getUnreadThreadMessage($data) {
+
+		$sql = "SELECT * FROM messages WHERE thread = ? AND is_read = 0 ORDER BY id DESC";
+
+		return $this->db->query($sql,$data);
+	}
+
 	public function check_thread($data) {
 
 		$sql = "SELECT * FROM thread WHERE cp_number = ?";
@@ -38,11 +45,15 @@ class Inbox_model extends CI_Model {
 		return $this->db->query($sql, $data);
 	}
 
-	public function thread_messages($data) {
+	public function thread_messages($thread, $from, $to) {
 
-		$sql = "SELECT * FROM messages WHERE thread = ? ORDER BY id ASC";
+		$thread1 = $this->db->escape_str($thread);
+		$from1 = $this->db->escape_str($from);
+		$to1 = $this->db->escape_str($to);
 
-		return $this->db->query($sql, $data);		
+		$sql = "SELECT * FROM messages WHERE thread = ".$thread1." ORDER BY id DESC LIMIT ".$from1.",".$to1;
+
+		return $this->db->query($sql);		
 	}
 
 	public function marked_read($data) {
@@ -51,9 +62,15 @@ class Inbox_model extends CI_Model {
 		$this->db->query($sql,$data);		
 	}
 
-	public function delete($data) {
+	public function delete_thread($data) {
 
-		$sql = "DELETE FROM messages WHERE id = ?";
+		$sql = "DELETE FROM thread WHERE id = ?";
+		return $this->db->query($sql,$data);		
+	}
+
+	public function delete_messages($data) {
+
+		$sql = "DELETE FROM messages WHERE thread = ?";
 		return $this->db->query($sql,$data);		
 	}
 

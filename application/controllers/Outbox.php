@@ -82,7 +82,7 @@ class Outbox extends CI_Controller {
 		$message1 = urlencode($message);	
 
 		if($message == "") {
-			echo json_encode(array("status" => "error", "message" => "Pls enter a message"))
+			echo json_encode(array("status" => "error", "message" => "Pls enter a message"));
 		}else {
 			echo $this->sendSMS($sms,$cpNumber1,$message1);
 		}

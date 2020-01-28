@@ -7,6 +7,7 @@ class Inbox extends CI_Controller {
  		parent::__construct();
  		$this->load->helper('url');
  		$this->load->model('inbox_model');
+ 		$this->load->model('people_model');
  	}
 
 	public function index() {
@@ -78,30 +79,69 @@ class Inbox extends CI_Controller {
 	public function showAll() {
 
 		$threadArr = array();
+		$messageArr = array();
 
 		$messages = $this->inbox_model->showAll()->result();
 
 		function my_cmp($a, $b) {
-		  if ($a->id == $b->id) {
+		  if ($a['id'] == $b['id']) {
 		    return 0;
 		  }
-		  return ($a->id < $b->id) ? -1 : 1;
+		  return ($a['id'] < $b['id']) ? -1 : 1;
 		}		
 		
 		foreach($messages as $msg) {
-			array_push($threadArr, $this->inbox_model->getLastMessage($msg->thread)->row());
+
+			$lastMsg = $this->inbox_model->getLastMessage($msg->thread)->row();
+			$stripNumber = str_replace("+63","",$lastMsg->cp_number);
+
+			if($this->people_model->getPeopleByNumber($stripNumber)->num_rows() > 0) {
+				
+				$name = $this->people_model->getPeopleByNumber($stripNumber)->row()->name;
+				$group = $this->people_model->getPeopleByNumber($stripNumber)->row()->groups;
+				$show = $this->people_model->getPeopleByNumber($stripNumber)->row()->name;
+			}else {
+				
+				$name = "";
+				$group = "";
+				$show = $lastMsg->cp_number;
+			}
+
+			$lastMessageArr = array(
+				"id" => $lastMsg->id,
+				"show" => $show,
+				"name" => $name,
+				"cp_number" => $lastMsg->cp_number,
+				"group" => $group,
+				"messages" => $lastMsg->messages,
+				"received" => $lastMsg->received,
+				"thread" => $lastMsg->thread,
+				"message_type" => $lastMsg->message_type,
+				"is_read" => $lastMsg->is_read
+			);
+
+			array_push($threadArr, $lastMessageArr);
 		}
 
 		usort($threadArr, "my_cmp");
-
 		echo json_encode(array_reverse($threadArr));	
 	}
 
 	public function thread_messages() {
 
 		$thread = $this->input->post('thread');
+		$from = $this->input->post('from');
+		$to = $this->input->post('to');
 
-		$messages = $this->inbox_model->thread_messages(array($thread))->result();
+		$messages = $this->inbox_model->thread_messages($thread,$from,$to)->result();
+		echo json_encode(array_reverse($messages));
+	}
+
+	public function thread_unread_messages() {
+
+		$thread = $this->input->post('thread');
+
+		$messages = $this->inbox_model->getUnreadThreadMessage($thread)->result();
 		echo json_encode($messages);
 	}
 
@@ -136,9 +176,10 @@ class Inbox extends CI_Controller {
 
 	public function delete() {
 
-		$id = $this->input->post('id');
+		$thread = $this->input->post('thread');
 
-		$this->inbox_model->delete(array($id));
+		$this->inbox_model->delete_thread(array($thread));
+		$this->inbox_model->delete_messages(array($thread));
 		$data = array('status' => 'success', 'messages' => 'OK');
 		echo json_encode($data);
 	}

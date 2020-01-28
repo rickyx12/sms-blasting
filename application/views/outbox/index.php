@@ -23,7 +23,7 @@
             <table id="outboxTbl" class="table table-bordered table-striped">
               <thead>
                 <tr>
-                  <th width="5%"></th>
+                  <th width="5%"><input type="checkbox" id="cbControl" class="form-control" checked="checked"></th>
                   <th width="15%">Cp#</th>
                   <th width="15%">Name</th>
                   <th>Message</th>

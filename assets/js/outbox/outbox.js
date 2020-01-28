@@ -2,38 +2,46 @@ var base_url = $('body').data('urlbase');
 var toSendArr = [];
 var outboxTotal = 0;
 
-function toSend(id,cpNumber, message,index,end,sent) {
+function toSend(sms, id, cpNumber, message,index,end,sent) {
 
 	let data = {
 		cpNumber: cpNumber,
-		message: message
+		message: message,
+		sms:"http://"+sms
 	};
 
 	$.ajax({
 		url:base_url+'Outbox/toSend',
 		type:'POST',
 		data:data,
+		beforeSend:function() {
+			$('#outboxStatus'+id).html("<i class='fa fa-paper-plane'></i>");
+		},
 		success:function(data, textStatus, xhr) {
+
 
 			if(xhr.status == 200) {
 
-				if(data !== "") {
+				if(data.trim() !== "") {
 
-					if(data.trim() !== "ERROR") {
-						$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
-						$('#totalSent').html(sent);
-					}else {
+					if(data.includes("ERROR")) {
+
 						$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
 						$('#totalSent').html(sent-1);
+					}else {
+
+						$('#outboxStatus'+id).html("<i class='fa fa-check'></i>");
+						$('#cbOutbox'+id).attr('checked',false);
+						$('#totalSent').html(sent);
 					}
 				}else {
-					$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
+					$('#outboxStatus'+id).html("<i class='fa fa-paper-plane'></i>");
 					$('#totalSent').html(sent-1);
-					// toSend(toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index,toSendArr.length,sent);
+					toSend(sms,toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index,toSendArr.length,sent);
 				}
 
 				if(index !== end) {
-					toSend(toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index+1,toSendArr.length,sent+1);
+					toSend(sms,toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index+1,toSendArr.length,sent+1);
 				}else {
 					$('#sendFromOutboxBtn').attr('disabled',false);
 					$('#removeOutboxBtn').attr('disabled',false);					
@@ -44,7 +52,9 @@ function toSend(id,cpNumber, message,index,end,sent) {
 				$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
 
 				if(index !== end) {
-					toSend(toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index+1,toSendArr.length,sent+1);
+					setTimeout(function(){
+						toSend(sms,toSendArr[index][0],toSendArr[index][1],toSendArr[index][2],index+1,toSendArr.length,sent+1);
+					},3000);
 				}
 			}
 		},
@@ -52,7 +62,6 @@ function toSend(id,cpNumber, message,index,end,sent) {
 
 		}
 	});
-
 }
 
 function deleteOutbox(id) {
@@ -89,7 +98,7 @@ $(function() {
 			$.each(res,function(index, val) {
 
 				html += "<tr id='outbox"+val.id+"'>";
-					html += "<td><input type='checkbox' name='outboxId' value='"+val.id+"' data-cpnumber='"+val.cpNumber+"' data-message='"+val.message+"' checked></td>";
+					html += "<td><input type='checkbox' id='cbOutbox"+val.id+"' class='form-control outboxCB' name='outboxId' value='"+val.id+"' data-cpnumber='"+val.cpNumber+"' data-message='"+val.message+"' checked></td>";
 					html += "<td class='outbox-msg'>+63"+val.cpNumber+"</td>";
 					html += "<td class='outbox-msg'>"+val.name+"</td>";
 					html += "<td class='outbox-msg'>"+val.message+"</td>";
@@ -140,13 +149,34 @@ $(function() {
 
 			toSendArr.push([id,cpNumber,message]);
 
-			// toSend(id,cpNumber,message);
 		});
 
+		$.ajax({
+			url: base_url+'/Config/smsDevice',
+			success:function(data, textStatus, xhr) {
 
-		toSend(toSendArr[0][0],toSendArr[0][1],toSendArr[0][2],0,toSendArr.length,0);
+				if(xhr.status == 200) {
+
+					let res = JSON.parse(data);
+
+					$.each(res,function(index, val) {
+						toSend(val.ipaddress,toSendArr[0][0],toSendArr[0][1],toSendArr[0][2],0,toSendArr.length,0);
+					});
+				}		
+			}
+		});
+
 		$('#totalUnsent').html(toSendArr.length);
 	});
 
+
+
+	$('#cbControl').click(function(){
+		if($('#cbControl').prop("checked")) {
+			$('.outboxCB').attr('checked',true);
+		}else {
+			$('.outboxCB').attr('checked',false);
+		}
+	});
 
 });

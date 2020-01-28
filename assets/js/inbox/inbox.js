@@ -18,11 +18,10 @@ function saveMessage(sms_address, index, cpNumber, message, timeRec, dateRec, me
     	type:'POST',
     	data:data,
     	beforeSend:function() {
-    		$.LoadingOverlay('show');
+    		// $('#inboxTbl').LoadingOverlay('show');
     	},
     	success:function(data, textStatus, xhr) {
 
-    		$.LoadingOverlay('hide');
     		let res = JSON.parse(data);
 
     		if(xhr.status == 200) {
@@ -80,40 +79,6 @@ function markedRead(thread) {
 
 }
 
-function checkName(index,thread,number,isRead) {
-
-	let formatNumber = number.replace("+63","");
-
-	let data = {
-		number:formatNumber
-	};
-
-	$.ajax({
-		url: base_url+'People/getPeopleByNumber',
-		type:'POST',
-		data:data,
-		success:function(result) {
-			
-			let res = JSON.parse(result);	
-
-			if(res) {
-
-				if(isRead == 0) {
-					$('#inboxSender'+index).html("<span id='senderName"+index+"' class='unread-msg unread"+thread+"'>"+res.name+"</span><br><span id='senderContact"+index+"' class='unread-msg unread"+thread+"' style='font-size:13px'>+63"+res.contact+"</span><br><span class='unread-msg unread"+thread+"' style='font-size:13px'>"+res.groups+"</span>");
-				}else {
-					$('#inboxSender'+index).html("<span id='senderName"+index+"'>"+res.name+"</span><br><span id='senderContact"+index+"' style='font-size:13px'>+63"+res.contact+"</span><br><span style='font-size:13px'>"+res.groups+"</span>");
-				}
-			
-			}else {
-
-				if(res) {
-					$('#inboxSender').html(res.name+"<br><span style='font-size:13px'>+63"+res.contact+"</span>");
-				}
-			}
-		}
-	});
-};
-
 function checkResponder(sms_address) {
 
 	$.ajax({
@@ -153,40 +118,14 @@ function unreadMsg(sms_address, flag) {
 			let revIndexesArr = indexesArr.reverse();
 
 			for(let i = 0; i < indexesArr.length; i++) {
-				// console.log(revIndexesArr[i][2]);
-				getSpecificMessage(sms_address,revIndexesArr[i][2],"new");
+				getSpecificMessage(sms_address,revIndexesArr[i][2]);
 			}
 		}
 	});	
 
 }
 
-function readMsg(sms_address) {
-
-	$.ajax({
-		url: sms_address+'/read_msg',
-		beforeSend:function() {
-			$('#inboxStatus').html("Retrieving messages.");
-		},
-		success:function(result) {
-
-			let indexes = result.matchAll(/(CMGL: (\w*))/g);
-			let indexesArr = Array.from(indexes);
-			let revIndexesArr = indexesArr.reverse();
-
-			for(let i = 0; i < indexesArr.length; i++) {
-				// console.log(revIndexesArr[i][2]);
-				getSpecificMessage(sms_address,revIndexesArr[i][2],"old");
-			}
-
-		},
-		complete:function(result) {
-			unreadMsg(sms_address,"show");
-		}		
-	});	
-}
-
-function getSpecificMessage(sms_address ,index, status) {
+function getSpecificMessage(sms_address ,index) {
 
 	let inbox = [];
 	let html = "";
@@ -195,10 +134,8 @@ function getSpecificMessage(sms_address ,index, status) {
 
 	$.ajax({
 		url: sms_address+'/specific_msg?index='+index,
-		complete:function() {
-			$("#inboxStatus").html("<span></span>");
-		},
 		success:function(result) {
+
 			let line = result.matchAll(/(CMGR=(\d*))/g);
 			let lineArr = Array.from(line);
 			let inputData = lineArr[0]["input"]; //extraction of data
@@ -240,18 +177,135 @@ function getSpecificMessage(sms_address ,index, status) {
 
 			saveMessage(sms_address, index, sanitizeMessageSender, messageContent, sanitizeMessageTime, sanitizeMessageDate, 'inbound');
 			getSystemInbox();
+			$("#inboxStatus").html("<span></span>");
 		}
 	});
 }
 
-
-function thread_messages(thread) {
+function thread_messages_new(thread) {
 
 	let html = '';
 
 	let data = {
 		thread: thread
 	};
+
+	$.ajax({
+		url: base_url+'/Inbox/thread_unread_messages',
+		type:'POST',
+		data:data,
+		beforeSend:function() {
+
+		},
+		success:function(data1, textStatus, xhr) {
+
+			$('#replyCloseBtn').attr('disabled',false);				
+
+			if(xhr.status == 200) {
+
+				let res = JSON.parse(data1);
+
+				$.each(res,function(index, val) {
+					
+					html += "<div class='row mr-0 mt-3 mb-3'>";
+						html += "<div class='col-md-6 speech-bubble-left'>";
+							html += "<span class='bubble-text'>"+val.messages+"<span>";
+							html += "<br>";
+							html += "<span class='bubble-rec'>"+val.received+"</span>"
+						html += "</div>"
+						html += "<div class='col-md-5'>";
+							html += "<br><span style='font-size:13px; color:#FF0000'>New</span>";
+						html += "</div>";							
+					html += "</div>";
+
+				});
+
+				$('#messageDiv').append(html);
+				$('#messageDiv').scrollTop($('#messageDiv')[0].scrollHeight);
+				$('#messageDiv').LoadingOverlay('hide');
+
+				$('#myModal').on('hidden.bs.modal', function (e) {
+					markedRead(thread);
+				})
+
+			}
+		}
+	});
+}
+
+function thread_messages_more(thread, from, to) {
+
+	let html = '';
+
+	let data = {
+		thread: thread,
+		from: from,
+		to: to
+	};
+
+	$.ajax({
+		url: base_url+'/Inbox/thread_messages',
+		type:'POST',
+		data:data,
+		beforeSend:function() {
+			$('#messageDiv').LoadingOverlay('show');
+		},
+		success:function(data1, textStatus, xhr) {
+
+			$('#replyCloseBtn').attr('disabled',false);				
+
+			if(xhr.status == 200) {
+
+				if(data1.length == 2) {
+					$('#loadMoreDiv').remove();
+				}
+
+				let res = JSON.parse(data1);
+
+				$.each(res,function(index, val) {
+					
+					html += "<div class='row mr-3 mt-3 mb-3'>";
+
+						if(val.message_type == "inbound") {
+							html += "<div class='col-md-6 speech-bubble-left'>";
+								html += "<span class='bubble-text'>"+val.messages+"<span>";
+								html += "<br>";
+								html += "<span class='bubble-rec'>"+val.received+"</span>"
+							html += "</div>"
+							html += "<div class='col-md-6'>";
+							html += "</div>";							
+						}else {
+							html += "<div class='col-md-6'>";
+							html += "</div>"
+							html += "<div class='col-md-6 speech-bubble-right'>";
+								html += "<span class='bubble-text'>"+val.messages+"<span>";
+								html += "<br>";
+								html += "<span class='bubble-rec'>"+val.received+"</span>"
+							html += "</div>"							
+						}
+					html += "</div>";
+
+				});
+
+				$('#loadMoreDiv').after(html);
+				$('#messageDiv').LoadingOverlay('hide');
+			}
+		}
+	});
+}
+
+function thread_messages(thread) {
+
+	let html = '';
+	let loadMore_from = 1;
+	let loadMore_to = 10;
+
+	let data = {
+		thread: thread,
+		from: 0,
+		to: 10
+	};
+
 
 	$('#replyCloseBtn').attr('disabled',true);
 	$('#replyBtn').attr('disabled',true);
@@ -260,15 +314,32 @@ function thread_messages(thread) {
 		url: base_url+'Inbox/thread_messages',
 		type:'POST',
 		data:data,
+		beforeSend:function() {
+			$('#messageDiv').html("");
+			$('#messageDiv').LoadingOverlay('show');			
+		},
 		success:function(data, textStatus, xhr) {
 
-			$('#messageDiv').LoadingOverlay('hide');
-
 			$('#replyCloseBtn').attr('disabled',false);		
+
+			$(document).on('click','#threadLoadMore'+thread,function() {
+
+				loadMore_from += 10;
+				loadMore_to += 10;
+				thread_messages_more(thread, loadMore_from, loadMore_to);	
+			});
 
 			if(xhr.status == 200) {
 
 				let res = JSON.parse(data);
+
+				if(res.length >= 10) {
+					html += "<div id='loadMoreDiv' class='row mr-3 mt-3 mb-3'>";
+						html += "<div class='col-md-12 text-center'>";
+							html += "<button id='threadLoadMore"+thread+"' class='btn btn-sm btn-success'>Load More</button>";
+						html += "</div>";
+					html += "</div>";
+				}
 
 				$.each(res,function(index, val) {
 					html += "<div class='row mr-3 mt-3 mb-3'>";
@@ -295,6 +366,7 @@ function thread_messages(thread) {
 
 				$('#messageDiv').html(html);
 				$('#messageDiv').scrollTop($('#messageDiv')[0].scrollHeight);
+				$('#messageDiv').LoadingOverlay('hide');
 			}
 
 		}
@@ -308,36 +380,31 @@ function getSystemInbox() {
 
 	$.ajax({
 		url: base_url+'/Inbox/showAll',
+		beforeSend:function() {
+			// $('#inboxTbl').LoadingOverlay('show');
+		},
 		success:function(data, textStatus, xhr) {
 
 			let res = JSON.parse(data);
 			
 			$.each(res,function(index, val) {
 
-				checkName(val.id, val.thread, val.cp_number, val.is_read);
-
 				$(document).on('click','#viewBtn'+val.id,function() {
 
 					let sender = $(this).data('cpnumber');
-					let msgTime = $(this).data('time');
-					let msgDate = $(this).data('date');
 					let message = $(this).data('message');
 					let thread = $(this).data('thread');
-
-					$('#messageDiv').html("");
-					$('#messageDiv').LoadingOverlay('show');
 
 					thread_messages(thread);
 					markedRead(thread);
 					
 					let textMax = 160;
 
-					if($('#senderName'+val.id).length) {
-						$('#readMsgModalHeader').html($('#senderName'+val.id).text()+"  <span style='font-size:15px;'>("+$('#senderContact'+val.id).text()+")</span>");
+					if(val.name != "") {
+						$('#readMsgModalHeader').html(val.show+"  <span style='font-size:15px;'>("+val.cp_number+")  ["+val.group+"]</span>");
 					}else {
-						$('#readMsgModalHeader').html(sender);
+						$('#readMsgModalHeader').html(val.show);
 					}
-
 
 					$('#readMsgModalField').val(message);
 					let sanitizeReplyToNumber = sender.replace("+63","");
@@ -357,29 +424,42 @@ function getSystemInbox() {
 				        $('#replyMsgLeftChar').html(text_remaining);
 				    });
 
+				    $('#replyCloseBtn').click(function() {
+				    	$("#replyToNumber").val("");
+				    	$("#replyThread").val("");
+				    });
+
 				});
 
-				systemHTML += "<tr id='inbox"+val.id+"' class='systemInbox'>";
-					systemHTML += "<td><input type='checkbox' name='index' data-storage='system' value='"+val.id+"'></td>";
+				systemHTML += "<tr id='inbox"+val.thread+"' class='systemInbox'>";
+					systemHTML += "<td><input type='checkbox' name='thread' data-storage='system' value='"+val.thread+"'></td>";
 					
 					if(val.is_read == 0) {
-						systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn unread-msg unread"+val.thread+"'>"+val.cp_number+"</a></td>";
+
+						systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn unread-msg unread"+val.thread+"'>"+val.show+"</a></td>";
 						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn unread-msg unread"+val.thread+"'>"+val.received+"</a></td>";
 						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn unread-msg unread"+val.thread+"'>"+val.messages+"</a></td>";
 						systemHTML += "<td class='inbox-msg'><button id='viewBtn"+val.id+"' class='btn btn-info' data-cpnumber='"+val.cp_number+"' data-thread='"+val.thread+"' data-message='"+val.messages+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";					
 					}else {
-						systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn'>"+val.cp_number+"</a></td>";	
+						
+						systemHTML += "<td class='inbox-msg'><a href='#' id='inboxSender"+val.id+"' class='inbox-btn'>"+val.show+"</a></td>";	
 						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.received+"</a></td>";
 						systemHTML += "<td class='inbox-msg'><a href='#' class='inbox-btn'>"+val.messages+"</a></td>";
 						systemHTML += "<td class='inbox-msg'><button id='viewBtn"+val.id+"' class='btn btn-info' data-cpnumber='"+val.cp_number+"' data-thread='"+val.thread+"' data-message='"+val.messages+"' data-toggle='modal' data-target='#viewModal'><i class='fa fa-newspaper'></i></button></td>";						
 					}
+
 				systemHTML += "</tr>";
+
+				if($('#replyThread').val() == val.thread) {
+					markedRead(val.thread);
+					thread_messages_new(val.thread);
+				}
 			});	
 
 			$('.inboxBody').html(systemHTML);
+		
 		}
 	});
-
 }
 
 function deleteSMS(sms_address, index) {
@@ -393,16 +473,16 @@ function deleteSMS(sms_address, index) {
     		}
     	},
     	complete:function() {
-    		$.LoadingOverlay('hide');
+    		
     	}
     });
 
 }
 
-function deleteSystemSMS(index) {
+function deleteSystemSMS(thread) {
 
 	let data = {
-		id: index
+		thread: thread
 	};
 
     $.ajax({
@@ -412,18 +492,17 @@ function deleteSystemSMS(index) {
     	success:function(result) {
 
     		if(result.includes("OK")) {
-    			$('#inbox'+index).remove("#inbox"+index);
+    			$('#inbox'+thread).remove("#inbox"+thread);
     		}
     	},
     	complete:function() {
-    		$.LoadingOverlay('hide');
+   
     	}
     });
 
 }
 
 $(function() {
-
 
 	$.ajax({
 		url: base_url+'/Config/smsDevice',
@@ -434,7 +513,7 @@ $(function() {
 				let res = JSON.parse(data);
 
 				$.each(res,function(index, val) {
-					readMsg("http://"+val.ipaddress);
+					unreadMsg("http://"+val.ipaddress);
 					checkResponder("http://"+val.ipaddress);
 				});
 			}		
@@ -445,9 +524,9 @@ $(function() {
 
 	$('#deleteMsg').click(function() {
 
-		$.LoadingOverlay('show');
+		$('#inboxTbl').LoadingOverlay('show');
 
-		$("input:checkbox[name=index]:checked").each(function(){
+		$("input:checkbox[name=thread]:checked").each(function(){
 		    
 		    let selectedIndex = $(this).val();
 
@@ -507,5 +586,15 @@ $(function() {
 		});
 	});
 
+	$('#refreshMsg').click(function(){
+		$('#inboxTbl').LoadingOverlay('show');
+		unreadMsg("http://"+val.ipaddress);
+		setTimeout(function(){
+			$('#inboxTbl').LoadingOverlay('hide');
+		},5000);
+	});
 
+	$(document).ajaxStop(function() {
+		$('#inboxTbl').LoadingOverlay('hide');
+	});
 });
