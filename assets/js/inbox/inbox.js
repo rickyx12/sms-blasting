@@ -39,7 +39,7 @@ function saveMessage(sms_address, index, cpNumber, message, timeRec, dateRec, me
 function saveSent(cpNumber, message, thread) {
 
 	let data = {
-		cpNumber: "+63"+cpNumber,
+		cpNumber: cpNumber,
 		message: message,
 		thread: thread
 	};
@@ -50,8 +50,12 @@ function saveSent(cpNumber, message, thread) {
 		data:data,
 		success:function(data, textStatus, xhr) {
 
-			if(textStatus == 200) {
-				console.log('ok');
+			if(xhr.status == 200) {
+				thread_messages(thread);
+				$('#replyMsgModalField').LoadingOverlay("hide");
+				$('#replyMsgModalField').val("");
+				$('#replyCloseBtn').attr('disabled',false);
+				$('#replyBtn').attr('disabled',false);				
 			}
 
 		}
@@ -148,6 +152,7 @@ function getSpecificMessage(sms_address ,index) {
 			let messageStatus = splitMessageHeader[0];
 			let messageSender = splitMessageHeader[1];
 			let sanitizeMessageSender = messageSender.replace(/['"]+/g, '');
+			let removeAreaCodeSender = sanitizeMessageSender.replace("+63","");
 			let messageDate = splitMessageHeader[3];
 			let sanitizeMessageDate = messageDate.replace(/['"]+/g, '');
 			let messageTime = splitMessageHeader[4].replace("+32","");
@@ -174,8 +179,8 @@ function getSpecificMessage(sms_address ,index) {
 			if(splitByNewLine[7] !== splitByNewLine.slice(-2)[0] && typeof splitByNewLine[7] !== 'undefined'  ) {
 				messageContent += "&nbsp;&nbsp;"+splitByNewLine[7];
 			}
-
-			saveMessage(sms_address, index, sanitizeMessageSender, messageContent, sanitizeMessageTime, sanitizeMessageDate, 'inbound');
+			
+			saveMessage(sms_address, index, removeAreaCodeSender, messageContent, sanitizeMessageTime, sanitizeMessageDate, 'inbound');
 			getSystemInbox();
 			$("#inboxStatus").html("<span></span>");
 		}
@@ -307,8 +312,9 @@ function thread_messages(thread) {
 	};
 
 
-	$('#replyCloseBtn').attr('disabled',true);
-	$('#replyBtn').attr('disabled',true);
+	$('#replyCloseBtn').attr('disabled', true);
+	$('#replyBtn').attr('disabled', true);
+	$('#refreshThread').attr('disabled', true);
 
 	$.ajax({
 		url: base_url+'Inbox/thread_messages',
@@ -320,7 +326,8 @@ function thread_messages(thread) {
 		},
 		success:function(data, textStatus, xhr) {
 
-			$('#replyCloseBtn').attr('disabled',false);		
+			$('#replyCloseBtn').attr('disabled', false);		
+			$('#refreshThread').attr('disabled', false);
 
 			$(document).on('click','#threadLoadMore'+thread,function() {
 
@@ -371,7 +378,6 @@ function thread_messages(thread) {
 
 		}
 	});
-
 }
 
 function getSystemInbox() {
@@ -391,7 +397,7 @@ function getSystemInbox() {
 
 				$(document).on('click','#viewBtn'+val.id,function() {
 
-					let sender = $(this).data('cpnumber');
+					let sender_number = $(this).data('cpnumber');
 					let message = $(this).data('message');
 					let thread = $(this).data('thread');
 
@@ -401,14 +407,14 @@ function getSystemInbox() {
 					let textMax = 160;
 
 					if(val.name != "") {
-						$('#readMsgModalHeader').html(val.show+"  <span style='font-size:15px;'>("+val.cp_number+")  ["+val.group+"]</span>");
+						$('#readMsgModalHeader').html(val.show+"  <span style='font-size:15px; margin-right:10rem;'>("+val.cp_number+")  ["+val.group+"]</span>");
 					}else {
 						$('#readMsgModalHeader').html(val.show);
 					}
 
 					$('#readMsgModalField').val(message);
-					let sanitizeReplyToNumber = sender.replace("+63","");
-					$('#replyToNumber').val(sanitizeReplyToNumber);
+					// let sanitizeReplyToNumber = sender.replace("+63","");
+					$('#replyToNumber').val(sender_number);
 					$('#replyThread').val(thread);
 
 				    $('#replyMsgModalField').keyup(function() {
@@ -422,6 +428,17 @@ function getSystemInbox() {
 						}
 
 				        $('#replyMsgLeftChar').html(text_remaining);
+				    });
+
+				    $(document).on('click', '#refreshThread', function() {
+				    	$('#refreshThread').attr('disabled', true);
+				    	$('#messageDiv').LoadingOverlay('show');
+				    	thread_messages_new(thread);
+
+				    	setTimeout(function(){
+				    		$('#messageDiv').LoadingOverlay('hide');
+				    		$('#refreshThread').attr('disabled', false);
+				    	},5000);
 				    });
 
 				    $('#replyCloseBtn').click(function() {
@@ -536,6 +553,8 @@ $(function() {
 	});
 
 
+	$('#sendFailedAlert').hide();
+
 	$('#replyBtn').click(function() {
 
 		$('#replyMsgModalField').LoadingOverlay("show");
@@ -570,14 +589,27 @@ $(function() {
 						success:function(data, textStatus, xhr) {
 
 							if(xhr.status == 200) {
-								saveSent(number, reply, thread);
-								$('#replyMsgModalField').LoadingOverlay("hide");
-								$('#replyMsgModalField').val("");
-								// $('#viewModal').modal('toggle');
-								$('#replyCloseBtn').attr('disabled',false);
-								$('#replyBtn').attr('disabled',false);
-								$('#messageDiv').LoadingOverlay("show");
-								thread_messages(thread);
+
+								if(data.trim() !== "") {
+
+									if(data.includes("ERROR")) {
+
+										$('#sendFailedAlert').show();
+										$('#replyMsgModalField').addClass('textAreaRed');										
+									}else {
+										
+										saveSent(number, reply, thread);
+									}
+
+								}else {
+
+									$('#sendFailedAlert').show();
+									$('#replyMsgModalField').addClass('textAreaRed');
+								}
+							}else {
+
+								$('#sendFailedAlert').show();
+								$('#replyMsgModalField').addClass('textAreaRed');	
 							}
 						}
 					});

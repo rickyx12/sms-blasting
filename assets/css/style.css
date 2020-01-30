@@ -130,3 +130,7 @@ a.links:hover {
 .bubble-rec {
 	font-size:11px;
 }
+
+.textAreaRed {
+	border-color: #FF0000;
+}

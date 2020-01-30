@@ -9,8 +9,11 @@
         </li>
       </ol>
       <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-6">
           <span id="smsInfo"></span>
+        </div>
+        <div class="col-md-6 text-right">
+          <button id="refreshInfo" class="btn btn-sm btn-success"><i class="fa fa-sync-alt"></i> Refresh</button>
         </div>
       </div>
     </div>

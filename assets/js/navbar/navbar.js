@@ -3,10 +3,10 @@ var sms_address = 'http://192.168.1.92';
 
 var signal = null;
 
-function startup() {
+function startup(sms_address) {
 
   $.ajax({
-    url: 'http://192.168.1.92/startup',
+    url: sms_address+'/startup',
     success:function(data, textStatus, xhr) {
 	
 		if(xhr.status == 200) {
@@ -17,7 +17,7 @@ function startup() {
 
 }
 
-function getSignal() {
+function getSignal(sms_address) {
 
 	$.ajax({
 		url: sms_address+'/signal',
@@ -44,7 +44,7 @@ function getSignal() {
 }
 
 
-function getNumber() {
+function getNumber(sms_address) {
 
 	$.ajax({
 		url: sms_address+'/phone_number',
@@ -61,7 +61,7 @@ function getNumber() {
 
 }
 
-function getOperator() {
+function getOperator(sms_address) {
 
 	$.ajax({
 		url: sms_address+'/operator',
@@ -79,7 +79,7 @@ function getOperator() {
 
 }
 
-function isResponderOn(index,keyword,cpNumber) {
+function isResponderOn(sms_address, index, keyword, cpNumber) {
 
 	$.ajax({
 		url: base_url+'Responder/isOn',
@@ -88,13 +88,13 @@ function isResponderOn(index,keyword,cpNumber) {
 			let res = JSON.parse(result);
 			
 			if(res.message === 1) {
-				getReply(index,keyword,cpNumber);
+				getReply(sms_address, index, keyword, cpNumber);
 			}
 		}
 	});
 };
 
-function getReply(index,keyword,cpNumber) {
+function getReply(sms_address, index, keyword, cpNumber) {
 
 	let data = {
 		keyword:keyword
@@ -108,14 +108,14 @@ function getReply(index,keyword,cpNumber) {
 
 			let res = JSON.parse(result);
 			if(res.status === 'success') {
-				toSend(index,cpNumber,res.message);
+				toSend(sms_address, index, cpNumber, res.message);
 			}
 		}
 	});
 
 }
 
-function toSend(index,cpNumber, message) {
+function toSend(sms_address, index, cpNumber,  message) {
 
 	let data = {
 		cpNumber: cpNumber,
@@ -128,7 +128,7 @@ function toSend(index,cpNumber, message) {
 		data:data,
 		success:function(result) {
 			setTimeout(function(){
-				deleteMessage(index);
+				deleteMessage(sms_address, index);
 			},10000);
 		},
 		complete:function() {
@@ -138,7 +138,7 @@ function toSend(index,cpNumber, message) {
 
 }
 
-function unreadMsgNav() {
+function unreadMsgNav(sms_address) {
 
 	$.ajax({
 		url: sms_address+'/unread_msg',
@@ -150,7 +150,7 @@ function unreadMsgNav() {
 
 			for(let i = 0; i < indexesArr.length; i++) {
 				// console.log(revIndexesArr[i][2]);
-				getMessage(revIndexesArr[i][2]);
+				getMessage(sms_address, revIndexesArr[i][2]);
 			}
 		}
 	});	
@@ -158,7 +158,7 @@ function unreadMsgNav() {
 }
 
 
-function getMessage(index) {
+function getMessage(sms_address, index) {
 
 
 	$.ajax({
@@ -187,13 +187,13 @@ function getMessage(index) {
 			let messageContent = splitByNewLine[2];
 
 			
-			isResponderOn(index,messageContent.trim(),removeSenderCountryCode);
+			isResponderOn(sms_address, index, messageContent.trim(), removeSenderCountryCode);
 		}
 	});
 }
 
 
-function deleteMessage(index) {
+function deleteMessage(sms_address, index) {
 
     $.ajax({
     	url: sms_address+'/delete_msg?index='+index,
@@ -207,7 +207,7 @@ function deleteMessage(index) {
 
 }
 
-function responderIndicator() {
+function responderIndicator(sms_address) {
 
 	$.ajax({
 		url: base_url+'Responder/isOn',
@@ -219,7 +219,7 @@ function responderIndicator() {
 				$('#responderIndicator').addClass('responderOn');
 
 				setInterval(function() {
-					unreadMsgNav();
+					unreadMsgNav(sms_address);
 				},10000);
 
 			}else {
@@ -232,10 +232,35 @@ function responderIndicator() {
 
 $(function() {
 
-	getSignal();
-	getNumber();
-	getOperator();	
-	responderIndicator();
+	$.ajax({
+		url: base_url+'Config/smsDevice',
+		beforeSend: function() {
+			$.LoadingOverlay("show");
+		},
+		success:function(data, textStatus, xhr) {
+
+			if(xhr.status == 200) {
+
+				let res = JSON.parse(data);
+				let html = '';
+
+				getSignal('http://'+res[0].ipaddress);
+				getNumber('http://'+res[0].ipaddress);
+				getOperator('http://'+res[0].ipaddress);	
+				responderIndicator('http://'+res[0].ipaddress);	
+
+				$('#smsInfo').html(html);
+
+			}else {
+				console.log('error');
+			}
+
+		}
+	});
+
+	$(document).ajaxStop(function() {
+		$.LoadingOverlay('hide');
+	});
 
 	// setInterval(function() {
 	// 	getSignal();

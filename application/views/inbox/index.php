@@ -50,10 +50,13 @@
                     </div> 
                   </div>
                   <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <label class="mt-3">Reply</label>
                     </div>
-                    <div class="col-md-6 mt-3 text-right">
+                    <div class="col-md-4 mt-3">
+                      <span id="sendFailedAlert" style="color:#FF0000; font-size: 15px;">Sending Failed</span>
+                    </div>
+                    <div class="col-md-4 mt-3 text-right">
                       <span id="replyMsgLeftChar">160</span>/160
                     </div>
                   </div>
@@ -62,6 +65,7 @@
                   <input type="hidden" id="replyThread">
                 </div>
                 <div class="modal-footer">
+                  <button id='refreshThread' class='btn btn-sm btn-primary' style="margin-right: 63%;"><i class='fa fa-sync-alt'></i></button>
                   <button type="button" id="replyCloseBtn" class="btn btn-danger" data-dismiss="modal">Close</button>
                   <button type="button" id="replyBtn" class="btn btn-success">Reply</button>
                 </div>

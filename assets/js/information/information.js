@@ -1,6 +1,25 @@
 
 var base_url = $('body').data('urlbase');
 
+function startup(ipaddress) {
+
+  $.ajax({
+    url: 'http://'+ipaddress+'/startup',
+    beforeSend:function() {
+      $.LoadingOverlay('show',{
+          image: "",
+          text: "Connecting to SMS."
+      });
+    },
+    success:function(result) {
+      $.LoadingOverlay('hide');
+    },
+    error:function() {
+      $.LoadingOverlay("text","Can't connect to SMS. Refresh the page.");   
+    }
+  }); 
+}
+
 function simNumber(id, sms_address) {
 
 	$.ajax({
@@ -17,7 +36,6 @@ function simNumber(id, sms_address) {
 			},5000);
 		}
 	});	
-
 }
 
 function simOperator(id, sms_address) {
@@ -65,10 +83,13 @@ function simSignal(id, sms_address) {
 	});	
 }
 
-$(function() {
+function initInfo() {
 
 	$.ajax({
 		url: base_url+'Config/smsDevice',
+		beforeSend: function() {
+			$.LoadingOverlay("show");
+		},
 		success:function(data, textStatus, xhr) {
 
 			if(xhr.status == 200) {
@@ -76,12 +97,18 @@ $(function() {
 				let res = JSON.parse(data);
 				let html = '';
 
+				//function below is from navbar.js
+				getSignal('http://'+res[0].ipaddress);
+				getNumber('http://'+res[0].ipaddress);
+				getOperator('http://'+res[0].ipaddress);	
+				responderIndicator('http://'+res[0].ipaddress);	
+
 				$.each(res,function(index, val) {
 
 					let id = val.id;
 					let alias = val.alias;
 					let ipaddress = val.ipaddress;
-					let delay = val.delay;
+					let sms_limit = val.sms_limit;
 
 					html += '<b>Alias</b>: '+alias;
 					html += '<br>';
@@ -92,10 +119,9 @@ $(function() {
 					html += '<b>Network</b>: <span id="network'+id+'"></span>';
 					html += '<br>';
 					html += '<b>Signal:</b> <span id="signal'+id+'"></span>';
-					html += '<br>';
-					html += '<b>Delay</b>: '+delay;
-					html += '<br><br>'
+					html += '<br><br>';
 
+					startup(ipaddress);
 					simNumber(id, ipaddress);
 					simOperator(id, ipaddress);
 					simSignal(id, ipaddress);
@@ -109,6 +135,19 @@ $(function() {
 			}
 
 		}
+	});
+}
+
+$(function() {
+
+	initInfo();
+
+	$('#refreshInfo').click(function() {
+		initInfo();
+	});
+
+	$(document).ajaxStop(function() {
+		$.LoadingOverlay('hide');
 	});
 
 });

@@ -18,30 +18,28 @@ class Config extends CI_Controller {
 
 	public function smsDevice() {
 		
-		// $sms = array(
-		// 	array(
-		// 		"id" => 1,
-		// 		"alias" => "SIM1",
-		// 		"ipaddress" => "192.168.1.92",
-		// 		"delay" => "7000"
-		// 	),
-		// 	array(
-		// 		"id" => 2,
-		// 		"alias" => "SIM2",
-		// 		"ipaddress" => "192.168.1.93",
-		// 		"delay" => "7000"
-		// 	)			
-		// );
-
-
 		$sms = array(
 			array(
 				"id" => 1,
 				"alias" => "SIM1",
-				"ipaddress" => "192.168.1.92",
-				"delay" => "7000"
-			)		
+				"ipaddress" => "192.168.1.92"
+			),
+			array(
+				"id" => 2,
+				"alias" => "SIM2",
+				"ipaddress" => "192.168.1.93"
+			)			
 		);
+
+
+		// $sms = array(
+		// 	array(
+		// 		"id" => 1,
+		// 		"alias" => "SIM1",
+		// 		"ipaddress" => "192.168.1.93",
+		// 		"sms_limit" => "7000"
+		// 	)		
+		// );
 
 		echo json_encode($sms);
 	}

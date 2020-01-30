@@ -7,6 +7,7 @@ class Outbox extends CI_Controller {
  		parent::__construct();
  		$this->load->helper('url');
  		$this->load->model('outbox_model');
+ 		$this->load->model('inbox_model');
  	}
 
 	public function index()
@@ -94,6 +95,53 @@ class Outbox extends CI_Controller {
 		$data = $this->outbox_model->getAllOutbox()->result();
 
 		echo json_encode($data);
+	}
+
+
+	public function saveSent() {
+
+		$cpNumber = $this->input->post('cpNumber');
+		$message = $this->input->post('message');
+		$messageType = $this->input->post('messageType');
+		$isRead = $this->input->post('isRead');
+
+		if($this->inbox_model->check_thread(array($cpNumber))->num_rows() == 0) {
+
+			$this->inbox_model->new_thread(array($cpNumber));
+
+			$data = array(
+				$cpNumber,
+				$message,
+				date("Y-m-d H:i:s"),
+				$this->db->insert_id(),
+				$messageType,
+				$isRead
+			);
+
+			$this->inbox_model->save_message($data);
+
+			$data = array('status' => 'success', 'message' => 'message saved.');
+
+			echo json_encode($data);
+
+			die("wow");
+		}else {
+
+			$data = array(
+				$cpNumber,
+				$message,
+				date("Y-m-d H:i:s"),
+				$this->inbox_model->check_thread(array($cpNumber))->row()->id,
+				$messageType,
+				$isRead
+			);
+
+			$this->inbox_model->save_message($data);
+
+			$data = array('status' => 'success', 'message' => 'message saved.');
+
+			echo json_encode($data);
+		}
 	}
 
 }

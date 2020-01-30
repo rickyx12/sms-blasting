@@ -104,7 +104,12 @@ class Inbox extends CI_Controller {
 				
 				$name = "";
 				$group = "";
-				$show = $lastMsg->cp_number;
+
+				if(is_numeric($lastMsg->cp_number)) {
+					$show = "+63".$lastMsg->cp_number;
+				}else {
+					$show = $lastMsg->cp_number;
+				}
 			}
 
 			$lastMessageArr = array(
