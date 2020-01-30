@@ -7,7 +7,7 @@ class Inbox_model extends CI_Model {
     }
 
 	public function save_message($data) {
-		$sql = "INSERT INTO messages(cp_number, messages, received, thread, message_type, is_read) VALUES (?,?,?,?,?,?)";
+		$sql = "INSERT INTO messages(cp_number, messages, received, thread, message_type, system_number, is_read) VALUES (?,?,?,?,?,?,?)";
 		$this->db->query($sql, $data);			
 	}
 

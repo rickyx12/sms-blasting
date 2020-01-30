@@ -2,7 +2,7 @@ var base_url = $('body').data('urlbase');
 // var sms_address = 'http://192.168.1.92';
 
 
-function saveMessage(sms_address, index, cpNumber, message, timeRec, dateRec, messageType) {
+function saveMessage(sms_address, index, cpNumber, message, timeRec, dateRec, messageType, systemNumber) {
 
     let data = {
     	cpNumber: cpNumber,
@@ -10,6 +10,7 @@ function saveMessage(sms_address, index, cpNumber, message, timeRec, dateRec, me
     	timeRec: timeRec,
     	dateRec: dateRec,
     	messageType: messageType,
+    	systemNumber: systemNumber,
     	isRead: 0
     };
 
@@ -34,14 +35,29 @@ function saveMessage(sms_address, index, cpNumber, message, timeRec, dateRec, me
     });
 }
 
+function getSender(sms_address, cpNumber, message, thread) {
 
+	$.ajax({
+		url: sms_address+'/phone_number',
+		success:function(result) {
 
-function saveSent(cpNumber, message, thread) {
+			let res = result.split("\n");
+			let res1 = res[1]
+			let res2 = res1.split(",");
+			let number = res2[1].replace(/['"]+/g, '');
+
+			saveSent(cpNumber, message, thread, number);			
+		}
+	});	
+}
+
+function saveSent(cpNumber, message, thread, sender) {
 
 	let data = {
 		cpNumber: cpNumber,
 		message: message,
-		thread: thread
+		thread: thread,
+		sender: sender
 	};
 
 	$.ajax({
@@ -54,6 +70,7 @@ function saveSent(cpNumber, message, thread) {
 				thread_messages(thread);
 				$('#replyMsgModalField').LoadingOverlay("hide");
 				$('#replyMsgModalField').val("");
+				$('#refreshThread').attr('disabled', false);
 				$('#replyCloseBtn').attr('disabled',false);
 				$('#replyBtn').attr('disabled',false);				
 			}
@@ -81,6 +98,22 @@ function markedRead(thread) {
 		}
 	});
 
+}
+
+function getRecepient(sms_address, index, sender, msgContent, msgTime, msgDate, msgType) {
+
+	$.ajax({
+		url: sms_address+'/phone_number',
+		success:function(result) {
+
+			let res = result.split("\n");
+			let res1 = res[1]
+			let res2 = res1.split(",");
+			let number = res2[1].replace(/['"]+/g, '');
+
+			saveMessage(sms_address, index, sender, msgContent, msgTime, msgDate, msgType, number);			
+		}
+	});	
 }
 
 function checkResponder(sms_address) {
@@ -180,7 +213,7 @@ function getSpecificMessage(sms_address ,index) {
 				messageContent += "&nbsp;&nbsp;"+splitByNewLine[7];
 			}
 			
-			saveMessage(sms_address, index, removeAreaCodeSender, messageContent, sanitizeMessageTime, sanitizeMessageDate, 'inbound');
+			getRecepient(sms_address, index, removeAreaCodeSender, messageContent, sanitizeMessageTime, sanitizeMessageDate, 'inbound');
 			getSystemInbox();
 			$("#inboxStatus").html("<span></span>");
 		}
@@ -302,8 +335,10 @@ function thread_messages_more(thread, from, to) {
 function thread_messages(thread) {
 
 	let html = '';
+	let systemNumber = null;
 	let loadMore_from = 1;
 	let loadMore_to = 10;
+
 
 	let data = {
 		thread: thread,
@@ -349,23 +384,34 @@ function thread_messages(thread) {
 				}
 
 				$.each(res,function(index, val) {
+
+					if(val.system_number !== "") {
+						if(val.message_type == 'inbound') {
+							systemNumber = "Recipient: +63"+val.system_number;
+						}else {
+							systemNumber = "Sender: +63"+val.system_number;
+						}
+					}else {
+						systemNumber = "Not available";
+					}
+
 					html += "<div class='row mr-3 mt-3 mb-3'>";
 
 						if(val.message_type == "inbound") {
-							html += "<div class='col-md-6 speech-bubble-left'>";
+							html += "<div class='col-md-6 speech-bubble-left' data-toggle='tooltip' data-placement='top' title='"+systemNumber+"'>";
 								html += "<span class='bubble-text'>"+val.messages+"<span>";
 								html += "<br>";
-								html += "<span class='bubble-rec'>"+val.received+"</span>"
+								html += "<span class='bubble-rec'>"+val.received+"</span>";
 							html += "</div>"
 							html += "<div class='col-md-6'>";
 							html += "</div>";							
 						}else {
 							html += "<div class='col-md-6'>";
 							html += "</div>"
-							html += "<div class='col-md-6 speech-bubble-right'>";
+							html += "<div class='col-md-6 speech-bubble-right' data-toggle='tooltip' data-placement='top' title='"+systemNumber+"'>";
 								html += "<span class='bubble-text'>"+val.messages+"<span>";
 								html += "<br>";
-								html += "<span class='bubble-rec'>"+val.received+"</span>"
+								html += "<span class='bubble-rec'>"+val.received+"</span>";
 							html += "</div>"							
 						}
 					html += "</div>";
@@ -379,6 +425,7 @@ function thread_messages(thread) {
 		}
 	});
 }
+
 
 function getSystemInbox() {
 
@@ -521,6 +568,8 @@ function deleteSystemSMS(thread) {
 
 $(function() {
 
+	$('[data-toggle="tooltip"]').tooltip();
+
 	$.ajax({
 		url: base_url+'/Config/smsDevice',
 		success:function(data, textStatus, xhr) {
@@ -559,6 +608,7 @@ $(function() {
 
 		$('#replyMsgModalField').LoadingOverlay("show");
 
+		$('#refreshThread').attr('disabled', true);
 		$('#replyCloseBtn').attr('disabled',true);
 		$('#replyBtn').attr('disabled',true);
 
@@ -598,7 +648,7 @@ $(function() {
 										$('#replyMsgModalField').addClass('textAreaRed');										
 									}else {
 										
-										saveSent(number, reply, thread);
+										getSender('http://'+defaultSMS, number, reply, thread);
 									}
 
 								}else {

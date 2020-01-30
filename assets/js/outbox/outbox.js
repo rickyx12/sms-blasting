@@ -2,12 +2,29 @@ var base_url = $('body').data('urlbase');
 var toSendArr = [];
 var outboxTotal = 0;
 
-function saveSent(id, cpNumber, message, messageType, isRead) {
+function getMyNumber(sms_address, id, cpNumber, message, messageType, isRead) {
+
+	$.ajax({
+		url: sms_address+'/phone_number',
+		success:function(result) {
+
+			let res = result.split("\n");
+			let res1 = res[1]
+			let res2 = res1.split(",");
+			let number = res2[1].replace(/['"]+/g, '');
+			
+			saveSent(id, cpNumber, message, messageType, isRead, number);
+		}
+	});	
+}
+
+function saveSent(id, cpNumber, message, messageType, isRead, systemNumber) {
 
 	let data = {
 		cpNumber: cpNumber,
 		message: message,
 		messageType: messageType,
+		systemNumber: systemNumber,
 		isRead: isRead
 	};
 
@@ -58,7 +75,7 @@ function toSend(sms, id, cpNumber, message, index, adder, sent) {
 						$('#totalSent').html(sent-1);
 					}else {
 
-						saveSent(id, cpNumber, message, "outbound", 1);
+						getMyNumber('http://'+sms, id, cpNumber, message, "outbound", 1);
 						$('#totalSent').html(sent);
 					}
 				}else {

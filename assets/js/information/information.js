@@ -33,6 +33,7 @@ function simNumber(id, sms_address) {
 
 			setTimeout(function() {
 				$('#phoneNumber'+id).html('+'+number);
+				store_sms(id, sms_address, number);
 			},5000);
 		}
 	});	
@@ -108,7 +109,6 @@ function initInfo() {
 					let id = val.id;
 					let alias = val.alias;
 					let ipaddress = val.ipaddress;
-					let sms_limit = val.sms_limit;
 
 					html += '<b>Alias</b>: '+alias;
 					html += '<br>';

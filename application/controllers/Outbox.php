@@ -103,6 +103,7 @@ class Outbox extends CI_Controller {
 		$cpNumber = $this->input->post('cpNumber');
 		$message = $this->input->post('message');
 		$messageType = $this->input->post('messageType');
+		$systemNumber = $this->input->post('systemNumber');
 		$isRead = $this->input->post('isRead');
 
 		if($this->inbox_model->check_thread(array($cpNumber))->num_rows() == 0) {
@@ -115,6 +116,7 @@ class Outbox extends CI_Controller {
 				date("Y-m-d H:i:s"),
 				$this->db->insert_id(),
 				$messageType,
+				$systemNumber,
 				$isRead
 			);
 
@@ -124,7 +126,6 @@ class Outbox extends CI_Controller {
 
 			echo json_encode($data);
 
-			die("wow");
 		}else {
 
 			$data = array(
@@ -133,6 +134,7 @@ class Outbox extends CI_Controller {
 				date("Y-m-d H:i:s"),
 				$this->inbox_model->check_thread(array($cpNumber))->row()->id,
 				$messageType,
+				$systemNumber,
 				$isRead
 			);
 

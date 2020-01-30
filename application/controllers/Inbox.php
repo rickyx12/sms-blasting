@@ -28,6 +28,7 @@ class Inbox extends CI_Controller {
 		$timeRec = $this->input->post('timeRec');
 		$dateRec = $this->input->post('dateRec');
 		$messageType = $this->input->post('messageType');
+		$systemNumber = $this->input->post('systemNumber');
 		$isRead = $this->input->post('isRead');
 		$thread = null;
 
@@ -44,6 +45,7 @@ class Inbox extends CI_Controller {
 				$formatDateRec1,
 				$this->db->insert_id(),
 				$messageType,
+				$systemNumber,
 				$isRead
 			);
 
@@ -64,6 +66,7 @@ class Inbox extends CI_Controller {
 				$formatDateRec1,
 				$this->inbox_model->check_thread(array($cpNumber))->row()->id,
 				$messageType,
+				$systemNumber,
 				$isRead
 			);
 
@@ -155,6 +158,7 @@ class Inbox extends CI_Controller {
 		$cpNumber = $this->input->post('cpNumber');
 		$message = $this->input->post('message');
 		$thread = $this->input->post('thread');
+		$sender = $this->input->post('sender');
 
 		$data = array(
 			'cp_number' => $cpNumber,
@@ -162,6 +166,7 @@ class Inbox extends CI_Controller {
 			'received' => date('Y-m-d H:i:s'),
 			'thread' => $thread,
 			'message_type' => 'outbound',
+			'sender' => $sender,
 			'is_read' => 1
 		);
 
