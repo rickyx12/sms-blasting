@@ -13,14 +13,14 @@ function replaceAll(str, find, replace) {
     return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
 }
 
-function sendToOutbox(cpNumber, name, message) {
-
-	$('#outboxModal').modal('toggle');
+function sendToOutbox(cpNumber, name, message, totalSMS, smsOrder, multiSmsOrder) {
 
 	let data = {
 		cpNumber:cpNumber,
 		name:name,
-		message:message
+		message:message,
+		smsOrder:smsOrder,
+		multiSmsOrder:multiSmsOrder
 	};
 
 	$.ajax({
@@ -29,24 +29,15 @@ function sendToOutbox(cpNumber, name, message) {
 		data:data,
 		success:function(result) {
 			addedToOutbox += 1;
-			$.LoadingOverlay("text", addedToOutbox+"/"+totalMember+" added to Outbox.");
+			$.LoadingOverlay("text", addedToOutbox+"/"+totalSMS+" added to Outbox.");
 		},
 		complete:function() {
 
 		} 
 	});	
-
-	$(document).ajaxStop(function() {
-		// $('#outboxModal').modal('toggle');
-		$('#sendOutboxBtn').attr('disabled',false);
-		$('#cancelOutboxBtn').attr('disabled',false);
-		$('#message').val("");		
-		$.LoadingOverlay("hide");
-	});
-
 }
 
-function getGroupMember(groupId,message) {
+function getGroupMember(groupId, message, multiSmsOrder, smsPerPerson) {
 
 	let fixFormat = replaceAll(message,"[[]]",);
 
@@ -61,17 +52,14 @@ function getGroupMember(groupId,message) {
 		data:data,
 		success:function(result) {
 
+			$('#outboxModal').modal('toggle');
 			let res = JSON.parse(result);
 
 			$.each(res,function(index, val) {
 
 				let fixFormat = replaceAll(message,"[[x]]",val.name);
-
-				totalMember += 1;
-				
-				setTimeout(function() {
-					sendToOutbox(val.contact, val.name, fixFormat);
-				},6000);	
+				let totalSMS = res.length * smsPerPerson;
+				sendToOutbox(val.contact, val.name, fixFormat, totalSMS, val.id, multiSmsOrder);
 			});
 		} 
 	});
@@ -130,13 +118,51 @@ function sendSMS(number,message) {
 
 $(function(){
 
+	let smsCount = 0;
 
 	getGroups();
 
-    $('#message').keyup(function() {
-        var text_length = $('#message').val().length;
-        var text_remaining = 160 - text_length;
+	$('#sendBtn').attr('disabled', true);
+	$('#outboxBtn').attr('disabled', true);
 
+    $('#message').keyup(function() {
+
+    	maxChar = 160;
+    	smsCount = 1;
+
+        var text_length = $('#message').val().length;
+        var text_remaining = maxChar - text_length;
+
+        if(text_length > 0) {
+			$('#sendBtn').attr('disabled', false);
+			$('#outboxBtn').attr('disabled', false);        	
+        }else {
+			$('#sendBtn').attr('disabled', true);
+			$('#outboxBtn').attr('disabled', true);         	
+        }
+
+
+        if(text_length > 160 && text_length <= 320) {
+        	text_remaining += 160;
+        	smsCount = 2;
+        }
+
+        if(text_length >= 321 && text_length <= 480) {
+	        text_remaining += 320;
+        	smsCount = 3;
+        }
+
+        if(text_length > 480 && text_length <= 640) {
+	        text_remaining += 480;
+        	smsCount = 4;
+        }
+
+        if(text_length > 640 && text_length <= 800) { 
+	       text_remaining += 640;
+        	smsCount = 5;
+        }
+
+        $('#smsCount').html(smsCount);
         $('#remainChar').html(text_remaining);
     });
 
@@ -156,6 +182,8 @@ $(function(){
 
 	$('#sendOutboxBtn').click(function() {
 
+		let smsOrder = 0;
+
 		$.LoadingOverlay("show",{
 			image: "",
 			text: "Sending to outbox."
@@ -164,13 +192,65 @@ $(function(){
 		$('#sendOutboxBtn').attr('disabled',true);
 		$('#cancelOutboxBtn').attr('disabled',true);
 
-		$("input:checkbox[name=groupId]:checked").each(function(){
+		$("input:checkbox[name=groupId]:checked").each(function() {
 
 		    let selectedIndex = $(this).val();
+		    let wholeSMS = $('#message').val();
 
-		    getGroupMember(selectedIndex, $('#message').val());
+		    if(smsCount == 2) {
+
+		    	let firstSMS = wholeSMS.substring(0, 160);
+		    	let secondSMS = wholeSMS.substring(161, wholeSMS.length);
+		    	
+		    	getGroupMember(selectedIndex, firstSMS, 1, 2);
+		    	getGroupMember(selectedIndex, secondSMS, 2, 2);
+		    }else if(smsCount == 3) {
+
+		    	let firstSMS = wholeSMS.substring(0, 160);
+		    	let secondSMS = wholeSMS.substring(161, 320);
+		    	let thirdSMS = wholeSMS.substring(321, wholeSMS.length);
+
+		    	getGroupMember(selectedIndex, firstSMS, 1, 3);
+		    	getGroupMember(selectedIndex, secondSMS, 2, 3);
+		    	getGroupMember(selectedIndex, thirdSMS, 3, 3);
+		    }else if(smsCount == 4) {
+
+		    	let firstSMS = wholeSMS.substring(0, 160);
+		    	let secondSMS = wholeSMS.substring(161, 320);
+		    	let thirdSMS = wholeSMS.substring(321, 480);
+		    	let fourthSMS = wholeSMS.substring(481, wholeSMS.length);
+
+		    	getGroupMember(selectedIndex, firstSMS, 1, 4);
+		    	getGroupMember(selectedIndex, secondSMS, 2, 4);
+		    	getGroupMember(selectedIndex, thirdSMS, 3, 4);
+		    	getGroupMember(selectedIndex, fourthSMS, 4, 4);		    	
+		    }else if(smsCount == 5) {
+
+		    	let firstSMS = wholeSMS.substring(0, 160);
+		    	let secondSMS = wholeSMS.substring(161, 320);
+		    	let thirdSMS = wholeSMS.substring(321, 480);
+		    	let fourthSMS = wholeSMS.substring(481, 640);
+		    	let fifthSMS = wholeSMS.substring(641, wholeSMS.length);
+
+		    	getGroupMember(selectedIndex, firstSMS, 1, 5);
+		    	getGroupMember(selectedIndex, secondSMS, 2, 5);
+		    	getGroupMember(selectedIndex, thirdSMS, 3, 5);
+		    	getGroupMember(selectedIndex, fourthSMS, 4, 5);
+		    	getGroupMember(selectedIndex, fifthSMS, 5, 5);
+		    }else {
+
+		    	getGroupMember(selectedIndex, wholeSMS,1,1);
+			}
 
 		});
+	});
+
+	$(document).ajaxStop(function() {
+		// $('#outboxModal').modal('toggle');
+		$('#sendOutboxBtn').attr('disabled',false);
+		$('#cancelOutboxBtn').attr('disabled',false);
+		$('#message').val("");		
+		$.LoadingOverlay("hide");
 	});
 
 });

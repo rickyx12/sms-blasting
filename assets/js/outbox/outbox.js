@@ -96,11 +96,12 @@ function toSend(sms, id, cpNumber, message, index, adder, sent) {
 			}else {
 				$('#outboxStatus'+id).html("<i class='fa fa-times'></i>");
 
-				if(typeof toSendArr[index] !== 'undefined') {
-					setTimeout(function(){
-						toSend(sms, toSendArr[index+adder][0], toSendArr[index+adder][1], toSendArr[index+adder][2], index+adder, adder, sent+1);
-					},3000);
-				}
+				//commented stop sending if failed to avoid loop sendinng
+				// if(typeof toSendArr[index] !== 'undefined') {
+				// 	setTimeout(function(){
+				// 		toSend(sms, toSendArr[index+adder][0], toSendArr[index+adder][1], toSendArr[index+adder][2], index+adder, adder, sent+1);
+				// 	},3000);
+				// }
 			}
 		},
 		complete:function() {
@@ -146,7 +147,7 @@ $(function() {
 					html += "<td><input type='checkbox' id='cbOutbox"+val.id+"' class='form-control outboxCB' name='outboxId' value='"+val.id+"' data-cpnumber='"+val.cpNumber+"' data-message='"+val.message+"' checked></td>";
 					html += "<td class='outbox-msg'>+63"+val.cpNumber+"</td>";
 					html += "<td class='outbox-msg'>"+val.name+"</td>";
-					html += "<td class='outbox-msg'>"+val.message+"</td>";
+					html += "<td class='outbox-msg'>"+val.message.substring(0,160)+"</td>";
 					html += "<td><span id='outboxStatus"+val.id+"'></span></td>";
 				html += "</tr>";
 

@@ -7,13 +7,13 @@ class Outbox_model extends CI_Model {
     }
 
 	public function add($data) {
-		$sql = "INSERT INTO outbox(cpNumber,name,message) VALUES (?,?,?)";
+		$sql = "INSERT INTO outbox(cpNumber,name,message,smsOrder,multiSmsOrder) VALUES (?,?,?,?,?)";
 		$this->db->query($sql, $data);	
 	}
 
 	public function getAllOutbox() {
 
-		$sql = "SELECT * FROM outbox";
+		$sql = "SELECT * FROM outbox ORDER BY smsOrder, multiSmsOrder ASC";
 
 		return $this->db->query($sql);
 	}

@@ -35,7 +35,7 @@ class Account extends CI_Controller {
 
 			if(password_verify($password,$hashPass->password)) {
 				$this->session->id = $account->id;
-				redirect('Dashboard/index');
+				redirect('Information/index');
 			}else {
 				redirect('Account/login');
 			}

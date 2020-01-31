@@ -19,12 +19,12 @@
 
         </div>
         <div class="col-md-8 text-right remainChar">
-            <span id="remainChar" class="mt-2">0</span> / 160
+            <span id="remainChar" class="mt-2">0</span> / 160 (<span id="smsCount"></span>/5)
         </div>
       </div>
       <div class="row">
         <div class="col-md-12">
-            <textarea id="message" class="form-control mt-3" rows="10" cols="40" maxlength="160"></textarea>
+            <textarea id="message" class="form-control mt-3" rows="10" cols="40" maxlength="800"></textarea>
         </div>
       </div>
       <div class="row">

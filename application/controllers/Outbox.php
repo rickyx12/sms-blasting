@@ -28,8 +28,10 @@ class Outbox extends CI_Controller {
 		$cpNumber = $this->input->post("cpNumber");
 		$name = $this->input->post("name");
 		$message = $this->input->post("message");
+		$smsOrder = $this->input->post("smsOrder");
+		$multiSmsOrder = $this->input->post("multiSmsOrder");
 
-		$data = array($cpNumber,$name,$message);
+		$data = array($cpNumber, $name, $message, $smsOrder, $multiSmsOrder);
 		$this->outbox_model->add($data);
 
 		$data = array('status' => 'success', 'message' => 'Success');
