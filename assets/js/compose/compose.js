@@ -82,6 +82,7 @@ function getGroups() {
 				html += "<tr>";
 					html += "<td><input type='checkbox' name='groupId' value='"+val.id+"'></td>";
 					html += "<td>"+val.name+"</td>";
+					html += "<td>"+val.members+"</td>";
 				html += "</tr>";
 
 				$('#outboxGroup').html(html);

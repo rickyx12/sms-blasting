@@ -50,6 +50,7 @@
                   <tr>
                     <th width="10%"></th>
                     <th>Group</th>
+                    <th>Member</th>
                   </tr>
                 <thead>
                 <tbody id="outboxGroup"></tbody>

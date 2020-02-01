@@ -62,9 +62,21 @@ class Groups extends CI_Controller {
 
         $this->isLogged();
 
-        $data = $this->groups_model->getGroups("","","")->result();
+        $dataArr = array();
 
-        echo json_encode($data);            
+        $group = $this->groups_model->getGroups("","","")->result();
+
+
+        foreach($group as $g) {
+            array_push($dataArr, array(
+                                    "id" => $g->id,
+                                    "name" => $g->name,
+                                    "members" => $this->people_model->getPeopleByGroup("","","",$g->id)->num_rows()
+                                )
+                        );
+        }
+
+        echo json_encode($dataArr);            
     }
 
     public function getPeopleByGroup() {
