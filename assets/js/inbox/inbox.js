@@ -770,18 +770,21 @@ $(function() {
 				    			[defaultSMS, number, firstSMS, thread],
 				    			[defaultSMS, number, secondSMS, thread]
 				    		);
+
 				    	sendReply(0, smsArr);
-						//sendReply(defaultSMS, number, firstSMS, thread);
-						//sendReply(defaultSMS, number, secondSMS, thread);
 				    }else if(smsCount == 3) {
 
 				    	let firstSMS = reply.substring(0, 160);
 				    	let secondSMS = reply.substring(161, 320);
 				    	let thirdSMS = reply.substring(321, reply.length);
 
-						sendReply(defaultSMS, number, firstSMS, thread);
-						sendReply(defaultSMS, number, secondSMS, thread);
-						sendReply(defaultSMS, number, thirdSMS, thread);
+				    	smsArr.push(
+				    			[defaultSMS, number, firstSMS, thread],
+				    			[defaultSMS, number, secondSMS, thread],
+				    			[defaultSMS, number, thirdSMS, thread]
+				    		);				    	
+
+						sendReply(0, smsArr);
 				    }else if(smsCount == 4) {
 
 				    	let firstSMS = reply.substring(0, 160);
@@ -789,10 +792,14 @@ $(function() {
 				    	let thirdSMS = reply.substring(321, 480);
 				    	let fourthSMS = reply.substring(481, reply.length);
 
-						sendReply(defaultSMS, number, firstSMS, thread);
-						sendReply(defaultSMS, number, secondSMS, thread);
-						sendReply(defaultSMS, number, thirdSMS, thread);
-						sendReply(defaultSMS, number, fourthSMS, thread);	    	
+				    	smsArr.push(
+				    			[defaultSMS, number, firstSMS, thread],
+				    			[defaultSMS, number, secondSMS, thread],
+				    			[defaultSMS, number, thirdSMS, thread],
+				    			[defaultSMS, number, fourthSMS, thread]
+				    		);	
+
+				    	sendReply(0, smsArr);
 				    }else if(smsCount == 5) {
 
 				    	let firstSMS = reply.substring(0, 160);
@@ -801,14 +808,22 @@ $(function() {
 				    	let fourthSMS = reply.substring(481, 640);
 				    	let fifthSMS = reply.substring(641, reply.length);
 
-						sendReply(defaultSMS, number, firstSMS, thread);
-						sendReply(defaultSMS, number, secondSMS, thread);
-						sendReply(defaultSMS, number, thirdSMS, thread);
-						sendReply(defaultSMS, number, fourthSMS, thread);
-						sendReply(defaultSMS, number, fifthSMS, thread);
+				    	smsArr.push(
+				    			[defaultSMS, number, firstSMS, thread],
+				    			[defaultSMS, number, secondSMS, thread],
+				    			[defaultSMS, number, thirdSMS, thread],
+				    			[defaultSMS, number, fourthSMS, thread],
+				    			[defaultSMS, number, fifthSMS, thread]
+				    		);
+
+				    	sendReply(0, smsArr);
 				    }else {
 
-				    	sendReply(defaultSMS, number, reply, thread);
+				    	smsArr.push(
+				    			[defaultSMS, number, reply, thread]
+				    		);
+
+				    	sendReply(0, smsArr);
 					}
 				}
 			}
