@@ -464,9 +464,14 @@ function getSystemInbox() {
 					$('#replyToNumber').val(sender_number);
 					$('#replyThread').val(thread);
 
+
 				    $('#replyMsgModalField').keyup(function() {
+
+				    	maxChar = 160;
+				    	smsCount = 1;
+
 				        var text_length = $('#replyMsgModalField').val().length;
-				        var text_remaining = textMax - text_length;
+				        var text_remaining = maxChar - text_length;
 
 						if(text_remaining == 160) {
 							$('#replyBtn').attr('disabled',true);
@@ -474,8 +479,32 @@ function getSystemInbox() {
 							$('#replyBtn').attr('disabled',false);
 						}
 
+
+				        if(text_length > 160 && text_length <= 320) {
+				        	text_remaining += 160;
+				        	smsCount = 2;
+				        }
+
+				        if(text_length >= 321 && text_length <= 480) {
+					        text_remaining += 320;
+				        	smsCount = 3;
+				        }
+
+				        if(text_length > 480 && text_length <= 640) {
+					        text_remaining += 480;
+				        	smsCount = 4;
+				        }
+
+				        if(text_length > 640 && text_length <= 800) { 
+					       text_remaining += 640;
+				        	smsCount = 5;
+				        }
+
+
+				        $('#smsCount').html(smsCount);
 				        $('#replyMsgLeftChar').html(text_remaining);
 				    });
+
 
 				    $(document).on('click', '#refreshThread', function() {
 				    	$('#refreshThread').attr('disabled', true);
@@ -566,6 +595,110 @@ function deleteSystemSMS(thread) {
 
 }
 
+
+// function sendReply(sms_address, number, reply, thread, callback) {
+
+// 	let data = {
+// 		cpNumber: number,
+// 		message: reply,
+// 		sms:'http://'+sms_address
+// 	};
+
+// 	$.ajax({
+// 		url: base_url+"Outbox/toSend",
+// 		type:'POST',
+// 		data:data,
+// 		success:function(data, textStatus, xhr) {
+
+// 			if(xhr.status == 200) {
+
+// 				if(data.trim() !== "") {
+
+// 					if(data.includes("ERROR")) {
+
+// 						$('#sendFailedAlert').show();
+// 						$('#replyMsgModalField').addClass('textAreaRed');										
+// 					}else {
+						
+// 						getSender('http://'+sms_address, number, reply, thread);
+// 					}
+
+// 				}else {
+
+// 					$('#sendFailedAlert').show();
+// 					$('#replyMsgModalField').addClass('textAreaRed');
+// 				}
+
+// 				if(callback !== "") {
+// 					callback();
+// 				}
+
+// 			}else {
+
+// 				$('#sendFailedAlert').show();
+// 				$('#replyMsgModalField').addClass('textAreaRed');	
+// 			}
+// 		}
+// 	});
+// }
+
+
+function sendReply(index, smsArr) {
+
+	// [defaultSMS, number, firstSMS, thread]
+
+	let data = {
+		cpNumber: smsArr[index][1],
+		message: smsArr[index][2],
+		sms:'http://'+smsArr[index][0]
+	};
+
+	$.ajax({
+		url: base_url+"Outbox/toSend",
+		type:'POST',
+		data:data,
+		success:function(data, textStatus, xhr) {
+
+			if(xhr.status == 200) {
+
+				if(data.trim() !== "") {
+
+					if(data.includes("ERROR")) {
+
+						$('#sendFailedAlert').show();
+						$('#replyMsgModalField').addClass('textAreaRed');										
+					}else {
+						
+						getSender('http://'+smsArr[index][0], smsArr[index][1], smsArr[index][2], smsArr[index][3]);
+
+						if(typeof smsArr[index+1] !== 'undefined') {
+
+							sendReply(index+1, smsArr);
+							$('#smsCount').html(smsCount-1);
+						}else {							
+							$('#replyMsgLeftChar').html(160);
+							$('#smsCount').html(1);
+						}
+
+					}
+
+				}else {
+
+					$('#sendFailedAlert').show();
+					$('#replyMsgModalField').addClass('textAreaRed');
+					$('#replyMsgModalField').LoadingOverlay("hide");
+				}
+			}else {
+
+				$('#sendFailedAlert').show();
+				$('#replyMsgModalField').addClass('textAreaRed');
+				$('#replyMsgModalField').LoadingOverlay("hide");	
+			}
+		}
+	});
+}
+
+
 $(function() {
 
 	$('[data-toggle="tooltip"]').tooltip();
@@ -606,6 +739,8 @@ $(function() {
 
 	$('#replyBtn').click(function() {
 
+		let smsArr = [];
+
 		$('#replyMsgModalField').LoadingOverlay("show");
 
 		$('#refreshThread').attr('disabled', true);
@@ -616,7 +751,6 @@ $(function() {
 		let reply = $("#replyMsgModalField").val();
 		let thread = $('#replyThread').val();
 
-
 		$.ajax({
 			url: base_url+'Config/smsDevice',
 			success: function(data1, textStatus, xhr) {
@@ -626,54 +760,80 @@ $(function() {
 					let res = JSON.parse(data1);
 					let defaultSMS = res[0].ipaddress;
 
-					let data = {
-						cpNumber: number,
-						message: reply,
-						sms:'http://'+defaultSMS
-					};
 
-					$.ajax({
-						url: base_url+"Outbox/toSend",
-						type:'POST',
-						data:data,
-						success:function(data, textStatus, xhr) {
+				    if(smsCount == 2) {
 
-							if(xhr.status == 200) {
+				    	let firstSMS = reply.substring(0, 160);
+				    	let secondSMS = reply.substring(161, reply.length);
+				    	
+				    	smsArr.push(
+				    			[defaultSMS, number, firstSMS, thread],
+				    			[defaultSMS, number, secondSMS, thread]
+				    		);
+				    	sendReply(0, smsArr);
+						//sendReply(defaultSMS, number, firstSMS, thread);
+						//sendReply(defaultSMS, number, secondSMS, thread);
+				    }else if(smsCount == 3) {
 
-								if(data.trim() !== "") {
+				    	let firstSMS = reply.substring(0, 160);
+				    	let secondSMS = reply.substring(161, 320);
+				    	let thirdSMS = reply.substring(321, reply.length);
 
-									if(data.includes("ERROR")) {
+						sendReply(defaultSMS, number, firstSMS, thread);
+						sendReply(defaultSMS, number, secondSMS, thread);
+						sendReply(defaultSMS, number, thirdSMS, thread);
+				    }else if(smsCount == 4) {
 
-										$('#sendFailedAlert').show();
-										$('#replyMsgModalField').addClass('textAreaRed');										
-									}else {
-										
-										getSender('http://'+defaultSMS, number, reply, thread);
-									}
+				    	let firstSMS = reply.substring(0, 160);
+				    	let secondSMS = reply.substring(161, 320);
+				    	let thirdSMS = reply.substring(321, 480);
+				    	let fourthSMS = reply.substring(481, reply.length);
 
-								}else {
+						sendReply(defaultSMS, number, firstSMS, thread);
+						sendReply(defaultSMS, number, secondSMS, thread);
+						sendReply(defaultSMS, number, thirdSMS, thread);
+						sendReply(defaultSMS, number, fourthSMS, thread);	    	
+				    }else if(smsCount == 5) {
 
-									$('#sendFailedAlert').show();
-									$('#replyMsgModalField').addClass('textAreaRed');
-								}
-							}else {
+				    	let firstSMS = reply.substring(0, 160);
+				    	let secondSMS = reply.substring(161, 320);
+				    	let thirdSMS = reply.substring(321, 480);
+				    	let fourthSMS = reply.substring(481, 640);
+				    	let fifthSMS = reply.substring(641, reply.length);
 
-								$('#sendFailedAlert').show();
-								$('#replyMsgModalField').addClass('textAreaRed');	
-							}
-						}
-					});
+						sendReply(defaultSMS, number, firstSMS, thread);
+						sendReply(defaultSMS, number, secondSMS, thread);
+						sendReply(defaultSMS, number, thirdSMS, thread);
+						sendReply(defaultSMS, number, fourthSMS, thread);
+						sendReply(defaultSMS, number, fifthSMS, thread);
+				    }else {
+
+				    	sendReply(defaultSMS, number, reply, thread);
+					}
 				}
 			}
 		});
 	});
 
 	$('#refreshMsg').click(function(){
+
 		$('#inboxTbl').LoadingOverlay('show');
-		unreadMsg("http://"+val.ipaddress);
-		setTimeout(function(){
-			$('#inboxTbl').LoadingOverlay('hide');
-		},5000);
+
+		$.ajax({
+			url: base_url+'/Config/smsDevice',
+			success:function(data, textStatus, xhr) {
+
+				if(xhr.status == 200) {
+
+					let res = JSON.parse(data);
+
+					$.each(res,function(index, val) {
+						unreadMsg("http://"+val.ipaddress);
+						checkResponder("http://"+val.ipaddress);
+					});
+				}		
+			}
+		});
 	});
 
 	$(document).ajaxStop(function() {

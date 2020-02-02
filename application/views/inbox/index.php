@@ -57,10 +57,10 @@
                       <span id="sendFailedAlert" style="color:#FF0000; font-size: 15px;">Sending Failed</span>
                     </div>
                     <div class="col-md-4 mt-3 text-right">
-                      <span id="replyMsgLeftChar">160</span>/160
+                      <span id="replyMsgLeftChar">160</span>/160  (<span id="smsCount">1</span>/5)
                     </div>
                   </div>
-                  <textarea id="replyMsgModalField" cols="3" rows="3" class="form-control" maxlength="160"></textarea>
+                  <textarea id="replyMsgModalField" cols="3" rows="3" class="form-control" maxlength="800"></textarea>
                   <input type="hidden" id="replyToNumber">
                   <input type="hidden" id="replyThread">
                 </div>
