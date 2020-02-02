@@ -22,8 +22,8 @@
       <?php endif; ?>
 
         <a id="dashboard" class="nav-link" href="<?= base_url('Dashboard/index') ?>">
-          <i class="fas fa-fw fa-tachometer-alt"></i>
-          <span>Dashboard</span>
+          <i class="fas fa-fw fa-users"></i>
+          <span>Groups</span>
         </a>
       </li>
 

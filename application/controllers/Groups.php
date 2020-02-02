@@ -28,10 +28,16 @@ class Groups extends CI_Controller {
 
 		if($name != "") {
 
-			$data = array($name);
-			$this->groups_model->add($data);
+            if($this->groups_model->getGroupByName(array($name))->num_rows() == 0) {
 
-			$response = array("status" => "success", "message" => "successfully added.");
+		  	   $data = array($name);
+		      $this->groups_model->add($data);
+
+			   $response = array("status" => "success", "message" => "successfully added.");
+            }else {
+                $response = array("status" => "error", "message" => "Group name exist.");
+            }
+
 		}else {
 			$response = array("status" => "error", "message" => "Please complete the form.");
 		}

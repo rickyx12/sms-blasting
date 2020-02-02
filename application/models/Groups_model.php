@@ -8,7 +8,13 @@ class Groups_model extends CI_Model {
 
 	public function add($data) {
 		$sql = "INSERT INTO groupcontact(name) VALUES (?)";
-		$this->db->query($sql, $data);			
+		$this->db->query($sql, $data);
+		return $this->db->insert_id();			
+	}
+
+	public function getGroupByName($data) {
+		$sql = "SELECT * FROM groupcontact WHERE name = ?";
+		return $this->db->query($sql, $data);	
 	}
 
 	public function getGroups($start,$length,$search) {
