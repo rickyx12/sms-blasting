@@ -63,9 +63,16 @@
                   <textarea id="replyMsgModalField" cols="3" rows="3" class="form-control" maxlength="800"></textarea>
                   <input type="hidden" id="replyToNumber">
                   <input type="hidden" id="replyThread">
+                  <div id="availableSimContainer" class="row">
+                    <div class="col-md-12 pt-2">
+                      <span id="availableSim"></span>
+                    </div>
+                  </div>
                 </div>
                 <div class="modal-footer">
-                  <button id='refreshThread' class='btn btn-sm btn-primary' style="margin-right: 63%;"><i class='fa fa-sync-alt'></i></button>
+                  <button id='refreshThread' class='btn btn-sm btn-primary'><i class='fa fa-sync-alt'></i></button>
+                  <button id='selectSim' class='btn btn-sm btn-primary' style="margin-right: 55%;"><i class='fa fa-sim-card'></i></button>
+
                   <button type="button" id="replyCloseBtn" class="btn btn-danger" data-dismiss="modal">Close</button>
                   <button type="button" id="replyBtn" class="btn btn-success">Reply</button>
                 </div>

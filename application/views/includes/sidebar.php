@@ -63,7 +63,7 @@
         </a>
       </li>
 
-      <?php if($page == "responder-nav"): ?>
+<!--       <?php if($page == "responder-nav"): ?>
         <li id="responder-nav" class="nav-item active">
       <?php else: ?>
         <li id="responder-nav" class="nav-item">
@@ -73,7 +73,7 @@
           <i class="fas fa-fw fa-reply-all"></i>
           <span>Responder</span>
         </a>
-      </li>
+      </li> -->
 
       <?php if($page == 'settings-page'): ?>
         <li id="settings-nav" class="nav-item active">

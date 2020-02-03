@@ -350,6 +350,7 @@ function thread_messages(thread) {
 	$('#replyCloseBtn').attr('disabled', true);
 	$('#replyBtn').attr('disabled', true);
 	$('#refreshThread').attr('disabled', true);
+	$('#selectSim').attr('disabled', true);
 
 	$.ajax({
 		url: base_url+'Inbox/thread_messages',
@@ -363,6 +364,7 @@ function thread_messages(thread) {
 
 			$('#replyCloseBtn').attr('disabled', false);		
 			$('#refreshThread').attr('disabled', false);
+			$('#selectSim').attr('disabled', false);
 
 			$(document).on('click','#threadLoadMore'+thread,function() {
 
@@ -517,6 +519,11 @@ function getSystemInbox() {
 				    	},5000);
 				    });
 
+				    $(document).on('click','#selectSim',function() {
+
+						$('#availableSimContainer').show();
+				    });
+
 				    $('#replyCloseBtn').click(function() {
 				    	$("#replyToNumber").val("");
 				    	$("#replyThread").val("");
@@ -595,54 +602,6 @@ function deleteSystemSMS(thread) {
 
 }
 
-
-// function sendReply(sms_address, number, reply, thread, callback) {
-
-// 	let data = {
-// 		cpNumber: number,
-// 		message: reply,
-// 		sms:'http://'+sms_address
-// 	};
-
-// 	$.ajax({
-// 		url: base_url+"Outbox/toSend",
-// 		type:'POST',
-// 		data:data,
-// 		success:function(data, textStatus, xhr) {
-
-// 			if(xhr.status == 200) {
-
-// 				if(data.trim() !== "") {
-
-// 					if(data.includes("ERROR")) {
-
-// 						$('#sendFailedAlert').show();
-// 						$('#replyMsgModalField').addClass('textAreaRed');										
-// 					}else {
-						
-// 						getSender('http://'+sms_address, number, reply, thread);
-// 					}
-
-// 				}else {
-
-// 					$('#sendFailedAlert').show();
-// 					$('#replyMsgModalField').addClass('textAreaRed');
-// 				}
-
-// 				if(callback !== "") {
-// 					callback();
-// 				}
-
-// 			}else {
-
-// 				$('#sendFailedAlert').show();
-// 				$('#replyMsgModalField').addClass('textAreaRed');	
-// 			}
-// 		}
-// 	});
-// }
-
-
 function sendReply(index, smsArr) {
 
 	// [defaultSMS, number, firstSMS, thread]
@@ -659,6 +618,11 @@ function sendReply(index, smsArr) {
 		data:data,
 		success:function(data, textStatus, xhr) {
 
+			$('#refreshThread').attr('disabled', false);
+			$('#replyCloseBtn').attr('disabled', false);
+			$('#replyBtn').attr('disabled', false);
+			$('#selectSim').attr('disabled',false);
+
 			if(xhr.status == 200) {
 
 				if(data.trim() !== "") {
@@ -666,7 +630,9 @@ function sendReply(index, smsArr) {
 					if(data.includes("ERROR")) {
 
 						$('#sendFailedAlert').show();
-						$('#replyMsgModalField').addClass('textAreaRed');										
+						$('#replyMsgModalField').addClass('textAreaRed');	
+						$('#replyMsgModalField').LoadingOverlay("hide");
+
 					}else {
 						
 						getSender('http://'+smsArr[index][0], smsArr[index][1], smsArr[index][2], smsArr[index][3]);
@@ -698,10 +664,13 @@ function sendReply(index, smsArr) {
 	});
 }
 
-
 $(function() {
 
 	$('[data-toggle="tooltip"]').tooltip();
+	$('#availableSimContainer').hide();
+
+	var simAvailable = '';
+	var simOrder = 0;
 
 	$.ajax({
 		url: base_url+'/Config/smsDevice',
@@ -714,8 +683,18 @@ $(function() {
 				$.each(res,function(index, val) {
 					unreadMsg("http://"+val.ipaddress);
 					checkResponder("http://"+val.ipaddress);
+
+					if(simOrder == 0) {
+						simAvailable += "<input type='radio' name='sim' value='"+val.ipaddress+"' checked> "+val.alias+'&nbsp;&nbsp;&nbsp;&nbsp;';
+					}else {
+						simAvailable += "<input type='radio' name='sim' value='"+val.ipaddress+"'> "+val.alias+'&nbsp;&nbsp;&nbsp;&nbsp;';
+					}
+
+					simOrder += 1;
 				});
-			}		
+			}
+
+			$('#availableSim').html(simAvailable);		
 		}
 	});
 
@@ -746,88 +725,78 @@ $(function() {
 		$('#refreshThread').attr('disabled', true);
 		$('#replyCloseBtn').attr('disabled',true);
 		$('#replyBtn').attr('disabled',true);
+		$('#selectSim').attr('disabled',true);
 
 		let number = $('#replyToNumber').val();
 		let reply = $("#replyMsgModalField").val();
 		let thread = $('#replyThread').val();
 
-		$.ajax({
-			url: base_url+'Config/smsDevice',
-			success: function(data1, textStatus, xhr) {
-				
-				if(xhr.status == 200) {
+		let defaultSMS = $("input[name='sim']:checked").val();
 
-					let res = JSON.parse(data1);
-					let defaultSMS = res[0].ipaddress;
+	    if(smsCount == 2) {
 
+	    	let firstSMS = reply.substring(0, 160);
+	    	let secondSMS = reply.substring(161, reply.length);
+	    	
+	    	smsArr.push(
+	    			[defaultSMS, number, firstSMS, thread],
+	    			[defaultSMS, number, secondSMS, thread]
+	    		);
 
-				    if(smsCount == 2) {
+	    	sendReply(0, smsArr);
+	    }else if(smsCount == 3) {
 
-				    	let firstSMS = reply.substring(0, 160);
-				    	let secondSMS = reply.substring(161, reply.length);
-				    	
-				    	smsArr.push(
-				    			[defaultSMS, number, firstSMS, thread],
-				    			[defaultSMS, number, secondSMS, thread]
-				    		);
+	    	let firstSMS = reply.substring(0, 160);
+	    	let secondSMS = reply.substring(161, 320);
+	    	let thirdSMS = reply.substring(321, reply.length);
 
-				    	sendReply(0, smsArr);
-				    }else if(smsCount == 3) {
+	    	smsArr.push(
+	    			[defaultSMS, number, firstSMS, thread],
+	    			[defaultSMS, number, secondSMS, thread],
+	    			[defaultSMS, number, thirdSMS, thread]
+	    		);				    	
 
-				    	let firstSMS = reply.substring(0, 160);
-				    	let secondSMS = reply.substring(161, 320);
-				    	let thirdSMS = reply.substring(321, reply.length);
+			sendReply(0, smsArr);
+	    }else if(smsCount == 4) {
 
-				    	smsArr.push(
-				    			[defaultSMS, number, firstSMS, thread],
-				    			[defaultSMS, number, secondSMS, thread],
-				    			[defaultSMS, number, thirdSMS, thread]
-				    		);				    	
+	    	let firstSMS = reply.substring(0, 160);
+	    	let secondSMS = reply.substring(161, 320);
+	    	let thirdSMS = reply.substring(321, 480);
+	    	let fourthSMS = reply.substring(481, reply.length);
 
-						sendReply(0, smsArr);
-				    }else if(smsCount == 4) {
+	    	smsArr.push(
+	    			[defaultSMS, number, firstSMS, thread],
+	    			[defaultSMS, number, secondSMS, thread],
+	    			[defaultSMS, number, thirdSMS, thread],
+	    			[defaultSMS, number, fourthSMS, thread]
+	    		);	
 
-				    	let firstSMS = reply.substring(0, 160);
-				    	let secondSMS = reply.substring(161, 320);
-				    	let thirdSMS = reply.substring(321, 480);
-				    	let fourthSMS = reply.substring(481, reply.length);
+	    	sendReply(0, smsArr);
+	    }else if(smsCount == 5) {
 
-				    	smsArr.push(
-				    			[defaultSMS, number, firstSMS, thread],
-				    			[defaultSMS, number, secondSMS, thread],
-				    			[defaultSMS, number, thirdSMS, thread],
-				    			[defaultSMS, number, fourthSMS, thread]
-				    		);	
+	    	let firstSMS = reply.substring(0, 160);
+	    	let secondSMS = reply.substring(161, 320);
+	    	let thirdSMS = reply.substring(321, 480);
+	    	let fourthSMS = reply.substring(481, 640);
+	    	let fifthSMS = reply.substring(641, reply.length);
 
-				    	sendReply(0, smsArr);
-				    }else if(smsCount == 5) {
+	    	smsArr.push(
+	    			[defaultSMS, number, firstSMS, thread],
+	    			[defaultSMS, number, secondSMS, thread],
+	    			[defaultSMS, number, thirdSMS, thread],
+	    			[defaultSMS, number, fourthSMS, thread],
+	    			[defaultSMS, number, fifthSMS, thread]
+	    		);
 
-				    	let firstSMS = reply.substring(0, 160);
-				    	let secondSMS = reply.substring(161, 320);
-				    	let thirdSMS = reply.substring(321, 480);
-				    	let fourthSMS = reply.substring(481, 640);
-				    	let fifthSMS = reply.substring(641, reply.length);
+	    	sendReply(0, smsArr);
+	    }else {
 
-				    	smsArr.push(
-				    			[defaultSMS, number, firstSMS, thread],
-				    			[defaultSMS, number, secondSMS, thread],
-				    			[defaultSMS, number, thirdSMS, thread],
-				    			[defaultSMS, number, fourthSMS, thread],
-				    			[defaultSMS, number, fifthSMS, thread]
-				    		);
+	    	smsArr.push(
+	    			[defaultSMS, number, reply, thread]
+	    		);
 
-				    	sendReply(0, smsArr);
-				    }else {
-
-				    	smsArr.push(
-				    			[defaultSMS, number, reply, thread]
-				    		);
-
-				    	sendReply(0, smsArr);
-					}
-				}
-			}
-		});
+	    	sendReply(0, smsArr);
+		}			
 	});
 
 	$('#refreshMsg').click(function(){
